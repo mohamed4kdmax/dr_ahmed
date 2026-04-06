@@ -1156,17 +1156,105 @@ const SUPPORT_CHATS_KEY = "clinic_support_chats_v1";
 const APPOINTMENTS_STORAGE_KEY = "clinic_appointments_v1";
 const APPOINTMENTS_ARCHIVE_KEY = "clinic_appointments_archive_v1";
 const APPOINTMENT_DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
+const SHARED_SYNC_KEYS = [
+    USERS_STORAGE_KEY,
+    PATIENTS_STORAGE_KEY,
+    EXTRA_ADMINS_KEY,
+    SUPPORT_CHATS_KEY,
+    APPOINTMENTS_STORAGE_KEY,
+    APPOINTMENTS_ARCHIVE_KEY
+];
 
 let dragAppointmentSource = null;
 let appointmentStatusTarget = null;
 let historyWeekOffset = 0;
 let historyBranchKey = "";
+let serverSyncEnabled = false;
+let serverPushTimer = null;
 
 let loginAttempts = 0;
 let isLocked = false;
 let registerLockTimerId = null;
 /** اسم المستخدم للجلسة الحالية (بعد تسجيل الدخول) */
 let currentSessionUser = null;
+
+function safeJsonParse(raw, fallback) {
+    try {
+        return JSON.parse(raw);
+    } catch (e) {
+        return fallback;
+    }
+}
+
+function collectSharedSnapshotFromLocal() {
+    const out = {};
+    SHARED_SYNC_KEYS.forEach(function (k) {
+        out[k] = safeJsonParse(localStorage.getItem(k), null);
+    });
+    return out;
+}
+
+function applySharedSnapshotToLocal(state) {
+    if (!state || typeof state !== "object") return;
+    SHARED_SYNC_KEYS.forEach(function (k) {
+        if (typeof state[k] === "undefined") return;
+        localStorage.setItem(k, JSON.stringify(state[k]));
+    });
+}
+
+async function initServerSync() {
+    try {
+        const res = await fetch("/api/state", { cache: "no-store" });
+        if (!res.ok) return false;
+        const payload = await res.json();
+        if (!payload || typeof payload !== "object" || typeof payload.state !== "object") return false;
+        applySharedSnapshotToLocal(payload.state);
+        serverSyncEnabled = true;
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+async function pullSharedStateFromServer() {
+    if (!serverSyncEnabled) return false;
+    try {
+        const res = await fetch("/api/state", { cache: "no-store" });
+        if (!res.ok) return false;
+        const payload = await res.json();
+        if (!payload || typeof payload !== "object" || typeof payload.state !== "object") return false;
+        applySharedSnapshotToLocal(payload.state);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+async function pushSharedStateToServer() {
+    if (!serverSyncEnabled) return;
+    try {
+        await fetch("/api/state", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ state: collectSharedSnapshotFromLocal() })
+        });
+    } catch (e) {
+        // لو الاتصال فشل، نسيب البيانات محلية لحين عودة السيرفر.
+    }
+}
+
+function queueServerPush() {
+    if (!serverSyncEnabled) return;
+    if (serverPushTimer) clearTimeout(serverPushTimer);
+    serverPushTimer = setTimeout(function () {
+        pushSharedStateToServer();
+    }, 180);
+}
+
+async function refreshSharedStateForUi() {
+    await pullSharedStateFromServer();
+    loadPatientsFromStorage();
+}
 
 function getExtraAdmins() {
     try {
@@ -1181,6 +1269,7 @@ function getExtraAdmins() {
 function saveExtraAdmins(arr) {
     const clean = arr.map(function (x) { return String(x).toLowerCase().trim(); }).filter(function (x) { return x && x !== ADMIN_USER.toLowerCase(); });
     localStorage.setItem(EXTRA_ADMINS_KEY, JSON.stringify(clean));
+    queueServerPush();
 }
 
 function removeExtraAdmin(username) {
@@ -1279,6 +1368,7 @@ function getRegisteredUsers() {
 
 function saveRegisteredUsers(arr) {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(arr));
+    queueServerPush();
 }
 
 function readRegLockUntil() {
@@ -1616,6 +1706,7 @@ function getSupportMessages() {
 
 function saveSupportMessages(arr) {
     localStorage.setItem(SUPPORT_CHATS_KEY, JSON.stringify(arr || []));
+    queueServerPush();
 }
 
 function sendSupportMessage(fromAccount, text) {
@@ -1718,7 +1809,8 @@ function sendSupportWidgetMessage() {
     renderSupportWidgetLog();
 }
 
-function showChatCenter() {
+async function showChatCenter() {
+    await refreshSharedStateForUi();
     setSidebarActive("chat");
     const all = getSupportMessages();
     if (isAdminSession()) {
@@ -1824,6 +1916,7 @@ function getAppointmentsData() {
 
 function saveAppointmentsData(data) {
     localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(data));
+    queueServerPush();
 }
 
 function getAppointmentsArchive() {
@@ -1837,6 +1930,7 @@ function getAppointmentsArchive() {
 
 function saveAppointmentsArchive(arr) {
     localStorage.setItem(APPOINTMENTS_ARCHIVE_KEY, JSON.stringify(arr || []));
+    queueServerPush();
 }
 
 function statusLabelAr(status) {
@@ -1978,7 +2072,8 @@ function getHistoryEntryByOffset(branchKey, offset) {
     return entries[offset] || null;
 }
 
-function showAppointmentsHistoryBranchChoice() {
+async function showAppointmentsHistoryBranchChoice() {
+    await refreshSharedStateForUi();
     setSidebarActive("appointments-history");
     historyBranchKey = "";
     historyWeekOffset = 0;
@@ -1992,7 +2087,8 @@ function showAppointmentsHistoryBranchChoice() {
         "</div></div></div>";
 }
 
-function showAppointmentsChoice() {
+async function showAppointmentsChoice() {
+    await refreshSharedStateForUi();
     setSidebarActive("appointments");
     document.getElementById("content").innerHTML =
         "<div class=\"animate-view\"><h2>📅 المواعيد</h2>" +
@@ -2427,6 +2523,7 @@ function loadPatientsFromStorage() {
 function persistPatients() {
     try {
         localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(patients));
+        queueServerPush();
     } catch (e) {
         alert(currentLang === "ar" ? "تعذر حفظ بيانات المرضى (التخزين ممتلئ أو كبير جداً)." : "Could not save patients (storage full or data too large).");
     }
@@ -2687,7 +2784,8 @@ function savePatient() {
     showPatients();
 }
 
-function showPatients(){
+async function showPatients(){
+    await refreshSharedStateForUi();
     setSidebarActive('patients');
     document.getElementById("content").innerHTML = `
     <div class="animate-view"><h2>${t('nav_manage')}</h2>
@@ -2793,7 +2891,8 @@ function showSettings() {
         "<div class=\"settings-credits\" data-i18n=\"settings_credits\">" + t("settings_credits") + "</div></div></div>";
 }
 
-function showManageAccounts() {
+async function showManageAccounts() {
+    await refreshSharedStateForUi();
     if (!isAdminSession()) {
         showWelcome();
         return;
@@ -2857,9 +2956,13 @@ function deleteRegisteredUser(index) {
 }
 
 function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
-window.onload = function () {
+window.onload = async function () {
+    await initServerSync();
     loadPatientsFromStorage();
     updateStaticTexts();
+    setInterval(function () {
+        pullSharedStateFromServer();
+    }, 5000);
 };
 </script>
 </body>
