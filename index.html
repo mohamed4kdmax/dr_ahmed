@@ -1142,6 +1142,10 @@ body.en-mode .accounts-actions-cell { justify-content: flex-end; }
     <div class="content" id="content"></div>
 </div>
 
+<!-- Firebase (Firestore) for shared storage across devices (works on GitHub Pages) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
 <script>
 const ADMIN_USER = "admin";
 const ADMIN_PASS = "1234";
@@ -1171,6 +1175,10 @@ let historyWeekOffset = 0;
 let historyBranchKey = "";
 let serverSyncEnabled = false;
 let serverPushTimer = null;
+let firebaseSyncEnabled = false;
+let firestoreDb = null;
+let firestoreUnsub = null;
+let firebasePushTimer = null;
 
 let loginAttempts = 0;
 let isLocked = false;
@@ -1184,6 +1192,101 @@ function safeJsonParse(raw, fallback) {
     } catch (e) {
         return fallback;
     }
+}
+
+// =========================
+// Firebase Firestore sync
+// =========================
+// 1) اعمل Firebase project + Firestore
+// 2) انسخ firebaseConfig هنا
+// 3) ارفع على GitHub Pages
+const firebaseConfig = {
+    apiKey: "AIzaSyBWMSPcnuYULvpcaj79-d1SgHafANBBAUg",
+    authDomain: "ftk-clinic.firebaseapp.com",
+    projectId: "ftk-clinic",
+    storageBucket: "ftk-clinic.firebasestorage.app",
+    messagingSenderId: "870496053890",
+    appId: "1:870496053890:web:4c5a83215084fedd81229b"
+};
+
+function hasFirebaseConfig(cfg) {
+    return !!(cfg && cfg.projectId && cfg.apiKey);
+}
+
+function getFirestoreDocRef() {
+    // نفس الداتا لكل الأجهزة
+    return firestoreDb.collection("ftk_clinic").doc("shared_state_v1");
+}
+
+async function initFirebaseSync() {
+    if (!hasFirebaseConfig(firebaseConfig)) return false;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        firestoreDb = firebase.firestore();
+        const ref = getFirestoreDocRef();
+        const snap = await ref.get();
+        if (snap.exists) {
+            const data = snap.data() || {};
+            if (data && typeof data.state === "object") {
+                applySharedSnapshotToLocal(data.state);
+            }
+        } else {
+            // أول مرة: ارفع أي بيانات محلية موجودة
+            await ref.set({ updatedAt: Date.now(), state: collectSharedSnapshotFromLocal() }, { merge: true });
+        }
+
+        // Live updates: أي تعديل من جهاز تاني يتطبق هنا فورًا
+        firestoreUnsub = ref.onSnapshot(function (s) {
+            if (!s.exists) return;
+            const d = s.data() || {};
+            if (d && typeof d.state === "object") {
+                applySharedSnapshotToLocal(d.state);
+                loadPatientsFromStorage();
+            }
+        });
+
+        firebaseSyncEnabled = true;
+        return true;
+    } catch (e) {
+        firebaseSyncEnabled = false;
+        return false;
+    }
+}
+
+async function pullSharedStateFromFirebase() {
+    if (!firebaseSyncEnabled || !firestoreDb) return false;
+    try {
+        const snap = await getFirestoreDocRef().get();
+        if (!snap.exists) return false;
+        const d = snap.data() || {};
+        if (d && typeof d.state === "object") {
+            applySharedSnapshotToLocal(d.state);
+            return true;
+        }
+        return false;
+    } catch (e) {
+        return false;
+    }
+}
+
+async function pushSharedStateToFirebase() {
+    if (!firebaseSyncEnabled || !firestoreDb) return;
+    try {
+        await getFirestoreDocRef().set(
+            { updatedAt: Date.now(), state: collectSharedSnapshotFromLocal() },
+            { merge: true }
+        );
+    } catch (e) {
+        // لو فشل الاتصال، نسيب البيانات محليًا لحين عودة النت
+    }
+}
+
+function queueFirebasePush() {
+    if (!firebaseSyncEnabled) return;
+    if (firebasePushTimer) clearTimeout(firebasePushTimer);
+    firebasePushTimer = setTimeout(function () {
+        pushSharedStateToFirebase();
+    }, 250);
 }
 
 function collectSharedSnapshotFromLocal() {
@@ -1252,7 +1355,8 @@ function queueServerPush() {
 }
 
 async function refreshSharedStateForUi() {
-    await pullSharedStateFromServer();
+    if (firebaseSyncEnabled) await pullSharedStateFromFirebase();
+    else await pullSharedStateFromServer();
     loadPatientsFromStorage();
 }
 
@@ -1270,6 +1374,7 @@ function saveExtraAdmins(arr) {
     const clean = arr.map(function (x) { return String(x).toLowerCase().trim(); }).filter(function (x) { return x && x !== ADMIN_USER.toLowerCase(); });
     localStorage.setItem(EXTRA_ADMINS_KEY, JSON.stringify(clean));
     queueServerPush();
+    queueFirebasePush();
 }
 
 function removeExtraAdmin(username) {
@@ -1369,6 +1474,7 @@ function getRegisteredUsers() {
 function saveRegisteredUsers(arr) {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(arr));
     queueServerPush();
+    queueFirebasePush();
 }
 
 function readRegLockUntil() {
@@ -1707,6 +1813,7 @@ function getSupportMessages() {
 function saveSupportMessages(arr) {
     localStorage.setItem(SUPPORT_CHATS_KEY, JSON.stringify(arr || []));
     queueServerPush();
+    queueFirebasePush();
 }
 
 function sendSupportMessage(fromAccount, text) {
@@ -1917,6 +2024,7 @@ function getAppointmentsData() {
 function saveAppointmentsData(data) {
     localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(data));
     queueServerPush();
+    queueFirebasePush();
 }
 
 function getAppointmentsArchive() {
@@ -1931,6 +2039,7 @@ function getAppointmentsArchive() {
 function saveAppointmentsArchive(arr) {
     localStorage.setItem(APPOINTMENTS_ARCHIVE_KEY, JSON.stringify(arr || []));
     queueServerPush();
+    queueFirebasePush();
 }
 
 function statusLabelAr(status) {
@@ -2524,6 +2633,7 @@ function persistPatients() {
     try {
         localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(patients));
         queueServerPush();
+        queueFirebasePush();
     } catch (e) {
         alert(currentLang === "ar" ? "تعذر حفظ بيانات المرضى (التخزين ممتلئ أو كبير جداً)." : "Could not save patients (storage full or data too large).");
     }
@@ -2957,11 +3067,16 @@ function deleteRegisteredUser(index) {
 
 function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
 window.onload = async function () {
-    await initServerSync();
+    // Prefer Firebase (works on GitHub Pages). If not configured, try local server, otherwise fall back to localStorage.
+    await initFirebaseSync();
+    if (!firebaseSyncEnabled) {
+        await initServerSync();
+    }
     loadPatientsFromStorage();
     updateStaticTexts();
     setInterval(function () {
-        pullSharedStateFromServer();
+        if (firebaseSyncEnabled) pullSharedStateFromFirebase();
+        else pullSharedStateFromServer();
     }, 5000);
 };
 </script>
