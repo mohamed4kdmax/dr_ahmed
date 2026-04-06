@@ -1168,6 +1168,19 @@ const SHARED_SYNC_KEYS = [
     APPOINTMENTS_STORAGE_KEY,
     APPOINTMENTS_ARCHIVE_KEY
 ];
+/** وثائق منفصلة لتقليل تعارض آخر-كتابة-تفوز بين الحسابات والمرضى */
+const FIRESTORE_LEGACY_DOC = "shared_state_v1";
+const FIRESTORE_DOC_ACCOUNTS = "shared_accounts_v1";
+const FIRESTORE_DOC_PATIENTS = "shared_patients_v1";
+const FIRESTORE_DOC_APP = "shared_app_v1";
+const ACCOUNT_SYNC_KEYS = [USERS_STORAGE_KEY, EXTRA_ADMINS_KEY];
+const PATIENT_SYNC_KEYS = [PATIENTS_STORAGE_KEY];
+const APP_SYNC_KEYS = [SUPPORT_CHATS_KEY, APPOINTMENTS_STORAGE_KEY, APPOINTMENTS_ARCHIVE_KEY];
+const FIRESTORE_SHARDS = [
+    { id: FIRESTORE_DOC_ACCOUNTS, keys: ACCOUNT_SYNC_KEYS, queue: "accounts" },
+    { id: FIRESTORE_DOC_PATIENTS, keys: PATIENT_SYNC_KEYS, queue: "patients" },
+    { id: FIRESTORE_DOC_APP, keys: APP_SYNC_KEYS, queue: "app" }
+];
 
 let dragAppointmentSource = null;
 let appointmentStatusTarget = null;
@@ -1177,8 +1190,8 @@ let serverSyncEnabled = false;
 let serverPushTimer = null;
 let firebaseSyncEnabled = false;
 let firestoreDb = null;
-let firestoreUnsub = null;
-let firebasePushTimer = null;
+let firestoreUnsubs = [];
+let firebasePushTimers = { accounts: null, patients: null, app: null };
 
 let loginAttempts = 0;
 let isLocked = false;
@@ -1213,9 +1226,73 @@ function hasFirebaseConfig(cfg) {
     return !!(cfg && cfg.projectId && cfg.apiKey);
 }
 
-function getFirestoreDocRef() {
-    // نفس الداتا لكل الأجهزة
-    return firestoreDb.collection("ftk_clinic").doc("shared_state_v1");
+function getFirestoreCollectionRef() {
+    return firestoreDb.collection("ftk_clinic");
+}
+
+function applyPartialStateToLocal(state, allowedKeys) {
+    if (!state || typeof state !== "object") return;
+    allowedKeys.forEach(function (k) {
+        if (typeof state[k] === "undefined") return;
+        localStorage.setItem(k, JSON.stringify(state[k]));
+    });
+}
+
+function collectShardStateFromLocal(keys) {
+    const out = {};
+    keys.forEach(function (k) {
+        out[k] = safeJsonParse(localStorage.getItem(k), null);
+    });
+    return out;
+}
+
+async function migrateLegacySharedStateIfNeeded() {
+    const col = getFirestoreCollectionRef();
+    const newAcc = await col.doc(FIRESTORE_DOC_ACCOUNTS).get();
+    if (newAcc.exists) return;
+    const leg = await col.doc(FIRESTORE_LEGACY_DOC).get();
+    if (!leg.exists) return;
+    const d = leg.data() || {};
+    if (!d || typeof d.state !== "object") return;
+    const st = d.state;
+    const acc = {};
+    ACCOUNT_SYNC_KEYS.forEach(function (k) {
+        if (typeof st[k] !== "undefined") acc[k] = st[k];
+    });
+    const pat = {};
+    PATIENT_SYNC_KEYS.forEach(function (k) {
+        if (typeof st[k] !== "undefined") pat[k] = st[k];
+    });
+    const app = {};
+    APP_SYNC_KEYS.forEach(function (k) {
+        if (typeof st[k] !== "undefined") app[k] = st[k];
+    });
+    const t = Date.now();
+    if (Object.keys(acc).length) await col.doc(FIRESTORE_DOC_ACCOUNTS).set({ updatedAt: t, state: acc }, { merge: true });
+    if (Object.keys(pat).length) await col.doc(FIRESTORE_DOC_PATIENTS).set({ updatedAt: t, state: pat }, { merge: true });
+    if (Object.keys(app).length) await col.doc(FIRESTORE_DOC_APP).set({ updatedAt: t, state: app }, { merge: true });
+}
+
+async function pushFirebaseShard(shard) {
+    if (!firebaseSyncEnabled || !firestoreDb) return;
+    const sh = FIRESTORE_SHARDS.find(function (x) { return x.queue === shard; });
+    if (!sh) return;
+    try {
+        await getFirestoreCollectionRef().doc(sh.id).set(
+            { updatedAt: Date.now(), state: collectShardStateFromLocal(sh.keys) },
+            { merge: true }
+        );
+    } catch (e) {
+        // لو فشل الاتصال، البيانات تفضل محليًا
+    }
+}
+
+function queueFirebasePushFor(shard) {
+    if (!firebaseSyncEnabled) return;
+    if (firebasePushTimers[shard]) clearTimeout(firebasePushTimers[shard]);
+    firebasePushTimers[shard] = setTimeout(function () {
+        pushFirebaseShard(shard);
+    }, 280);
 }
 
 async function initFirebaseSync() {
@@ -1223,27 +1300,40 @@ async function initFirebaseSync() {
     try {
         firebase.initializeApp(firebaseConfig);
         firestoreDb = firebase.firestore();
-        const ref = getFirestoreDocRef();
-        const snap = await ref.get();
-        if (snap.exists) {
-            const data = snap.data() || {};
-            if (data && typeof data.state === "object") {
-                applySharedSnapshotToLocal(data.state);
+        const col = getFirestoreCollectionRef();
+        await migrateLegacySharedStateIfNeeded();
+
+        for (let i = 0; i < FIRESTORE_SHARDS.length; i++) {
+            const sh = FIRESTORE_SHARDS[i];
+            const ref = col.doc(sh.id);
+            const snap = await ref.get();
+            if (snap.exists) {
+                const data = snap.data() || {};
+                if (data && typeof data.state === "object") {
+                    applyPartialStateToLocal(data.state, sh.keys);
+                }
+            } else {
+                const partial = collectShardStateFromLocal(sh.keys);
+                const hasAny = Object.keys(partial).some(function (k) { return partial[k] !== null; });
+                if (hasAny) {
+                    await ref.set({ updatedAt: Date.now(), state: partial }, { merge: true });
+                }
             }
-        } else {
-            // أول مرة: ارفع أي بيانات محلية موجودة
-            await ref.set({ updatedAt: Date.now(), state: collectSharedSnapshotFromLocal() }, { merge: true });
         }
 
-        // Live updates: أي تعديل من جهاز تاني يتطبق هنا فورًا
-        firestoreUnsub = ref.onSnapshot(function (s) {
-            if (!s.exists) return;
-            const d = s.data() || {};
-            if (d && typeof d.state === "object") {
-                applySharedSnapshotToLocal(d.state);
-                loadPatientsFromStorage();
-            }
-        });
+        firestoreUnsubs = [];
+        for (let j = 0; j < FIRESTORE_SHARDS.length; j++) {
+            const sh2 = FIRESTORE_SHARDS[j];
+            const u = col.doc(sh2.id).onSnapshot(function (s) {
+                if (!s.exists) return;
+                const dd = s.data() || {};
+                if (dd && typeof dd.state === "object") {
+                    applyPartialStateToLocal(dd.state, sh2.keys);
+                    loadPatientsFromStorage();
+                }
+            });
+            firestoreUnsubs.push(u);
+        }
 
         firebaseSyncEnabled = true;
         return true;
@@ -1256,37 +1346,22 @@ async function initFirebaseSync() {
 async function pullSharedStateFromFirebase() {
     if (!firebaseSyncEnabled || !firestoreDb) return false;
     try {
-        const snap = await getFirestoreDocRef().get();
-        if (!snap.exists) return false;
-        const d = snap.data() || {};
-        if (d && typeof d.state === "object") {
-            applySharedSnapshotToLocal(d.state);
-            return true;
+        const col = getFirestoreCollectionRef();
+        let ok = false;
+        for (let i = 0; i < FIRESTORE_SHARDS.length; i++) {
+            const sh = FIRESTORE_SHARDS[i];
+            const snap = await col.doc(sh.id).get();
+            if (!snap.exists) continue;
+            const d = snap.data() || {};
+            if (d && typeof d.state === "object") {
+                applyPartialStateToLocal(d.state, sh.keys);
+                ok = true;
+            }
         }
-        return false;
+        return ok;
     } catch (e) {
         return false;
     }
-}
-
-async function pushSharedStateToFirebase() {
-    if (!firebaseSyncEnabled || !firestoreDb) return;
-    try {
-        await getFirestoreDocRef().set(
-            { updatedAt: Date.now(), state: collectSharedSnapshotFromLocal() },
-            { merge: true }
-        );
-    } catch (e) {
-        // لو فشل الاتصال، نسيب البيانات محليًا لحين عودة النت
-    }
-}
-
-function queueFirebasePush() {
-    if (!firebaseSyncEnabled) return;
-    if (firebasePushTimer) clearTimeout(firebasePushTimer);
-    firebasePushTimer = setTimeout(function () {
-        pushSharedStateToFirebase();
-    }, 250);
 }
 
 function collectSharedSnapshotFromLocal() {
@@ -1374,7 +1449,7 @@ function saveExtraAdmins(arr) {
     const clean = arr.map(function (x) { return String(x).toLowerCase().trim(); }).filter(function (x) { return x && x !== ADMIN_USER.toLowerCase(); });
     localStorage.setItem(EXTRA_ADMINS_KEY, JSON.stringify(clean));
     queueServerPush();
-    queueFirebasePush();
+    queueFirebasePushFor("accounts");
 }
 
 function removeExtraAdmin(username) {
@@ -1474,7 +1549,7 @@ function getRegisteredUsers() {
 function saveRegisteredUsers(arr) {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(arr));
     queueServerPush();
-    queueFirebasePush();
+    queueFirebasePushFor("accounts");
 }
 
 function readRegLockUntil() {
@@ -1813,7 +1888,7 @@ function getSupportMessages() {
 function saveSupportMessages(arr) {
     localStorage.setItem(SUPPORT_CHATS_KEY, JSON.stringify(arr || []));
     queueServerPush();
-    queueFirebasePush();
+    queueFirebasePushFor("app");
 }
 
 function sendSupportMessage(fromAccount, text) {
@@ -2024,7 +2099,7 @@ function getAppointmentsData() {
 function saveAppointmentsData(data) {
     localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(data));
     queueServerPush();
-    queueFirebasePush();
+    queueFirebasePushFor("app");
 }
 
 function getAppointmentsArchive() {
@@ -2039,7 +2114,7 @@ function getAppointmentsArchive() {
 function saveAppointmentsArchive(arr) {
     localStorage.setItem(APPOINTMENTS_ARCHIVE_KEY, JSON.stringify(arr || []));
     queueServerPush();
-    queueFirebasePush();
+    queueFirebasePushFor("app");
 }
 
 function statusLabelAr(status) {
@@ -2633,7 +2708,7 @@ function persistPatients() {
     try {
         localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(patients));
         queueServerPush();
-        queueFirebasePush();
+        queueFirebasePushFor("patients");
     } catch (e) {
         alert(currentLang === "ar" ? "تعذر حفظ بيانات المرضى (التخزين ممتلئ أو كبير جداً)." : "Could not save patients (storage full or data too large).");
     }
