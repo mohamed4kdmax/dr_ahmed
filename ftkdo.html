@@ -1,0 +1,2866 @@
+<!DOCTYPE html>
+<html lang="ar" id="html-tag">
+<head>
+<meta charset="UTF-8">
+<title>عيادة دكتور أحمد وجيه | Dr. Ahmed Wagih Clinic</title>
+<style>
+:root {
+  --bg-color: #e8f2f4;
+  --card-bg: #ffffff;
+  --text-color: #333;
+  --sidebar-bg: rgba(255, 255, 255, 0.97);
+  --border-color: #e0e8ea;
+  --header-bg: #8B0000;
+  --accent-color: #8B0000;
+  --hover-color: #fceaea;
+  --danger-color: #dc3545;
+  --injection-bg: #e3f2fd; /* لون الحقنة - أزرق فاتح */
+}
+
+.dark-mode {
+  --bg-color: #0f1418;
+  --card-bg: #1e1e1e;
+  --text-color: #e0e0e0;
+  --sidebar-bg: rgba(24, 28, 32, 0.96);
+  --border-color: #333;
+  --hover-color: #2d2d2d;
+  --injection-bg: #0d47a1; /* أزرق داكن للوضع الليلي */
+}
+
+/* خلفية عيادة: تدرج هادئ + نمط طبي (صليب/دائرة) + زوايا شفافة لسماعة وحقنة */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  background-color: var(--bg-color);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cg fill='none' stroke='%238B0000' stroke-width='1' opacity='0.11'%3E%3Cpath d='M44 8v18M32 17h24'/%3E%3Ccircle cx='44' cy='52' r='14'/%3E%3Cpath d='M44 66v10M38 76h12'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(ellipse 120% 80% at 100% 0%, rgba(139, 0, 0, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 100% 70% at 0% 100%, rgba(46, 125, 120, 0.07) 0%, transparent 50%),
+    linear-gradient(168deg, #f5fafb 0%, var(--bg-color) 42%, #e2eef1 100%);
+  background-size: 88px 88px, auto, auto, auto;
+  color: var(--text-color);
+  direction: rtl;
+  transition: background-color 0.4s ease, color 0.4s ease;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.14;
+  font-size: clamp(4rem, 12vw, 9rem);
+  line-height: 1;
+  filter: grayscale(0.15);
+}
+
+/* سماعة طبية وزاوية */
+body::before {
+  content: "\1FA7A";
+  top: 8%;
+  left: 3%;
+  transform: rotate(-12deg);
+}
+
+body::after {
+  content: "\1F489";
+  bottom: 10%;
+  right: 4%;
+  transform: rotate(18deg);
+}
+
+body.en-mode::before {
+  left: auto;
+  right: 3%;
+  transform: rotate(12deg);
+}
+
+body.en-mode::after {
+  right: auto;
+  left: 4%;
+  transform: rotate(-18deg);
+}
+
+body.dark-mode {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1' opacity='0.06'%3E%3Cpath d='M44 8v18M32 17h24'/%3E%3Ccircle cx='44' cy='52' r='14'/%3E%3Cpath d='M44 66v10M38 76h12'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(ellipse 100% 60% at 100% 0%, rgba(139, 0, 0, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 90% 50% at 0% 100%, rgba(30, 80, 90, 0.2) 0%, transparent 45%),
+    linear-gradient(168deg, #141a1f 0%, var(--bg-color) 50%, #0c1014 100%);
+}
+
+body.dark-mode::before,
+body.dark-mode::after {
+  opacity: 0.09;
+}
+
+#main-nav,
+#main-header,
+#main-container {
+  position: relative;
+  z-index: 1;
+}
+
+body.en-mode { direction: ltr; }
+
+/* شاشة تسجيل الدخول */
+#login-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(160deg, rgba(245, 250, 251, 0.94), rgba(232, 242, 244, 0.97));
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000; transition: 0.5s;
+}
+
+body.dark-mode #login-screen {
+    background: linear-gradient(160deg, rgba(20, 26, 31, 0.95), rgba(15, 20, 24, 0.98));
+}
+
+.login-card {
+    background: var(--card-bg); padding: 40px; border-radius: 25px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 400px;
+    text-align: center; border-top: 5px solid var(--accent-color);
+    position: relative;
+}
+
+.lang-switch-login {
+    position: absolute; top: 15px; right: 15px;
+}
+body.en-mode .lang-switch-login { right: auto; left: 15px; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes heroShine {
+  0%, 100% { box-shadow: 0 15px 35px rgba(139, 0, 0, 0.2), 0 0 0 0 rgba(255, 255, 255, 0.08); }
+  50% { box-shadow: 0 22px 45px rgba(139, 0, 0, 0.35), 0 0 40px 8px rgba(255, 255, 255, 0.12); }
+}
+
+@keyframes heroGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes searchReveal {
+  from { opacity: 0; transform: translateX(22px) scale(0.98); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes filterReveal {
+  from { opacity: 0; transform: translateX(-28px) rotate(-1deg); filter: blur(4px); }
+  to { opacity: 1; transform: translateX(0) rotate(0); filter: blur(0); }
+}
+
+@keyframes filterGlowRing {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 0, 0, 0), 0 2px 8px rgba(139, 0, 0, 0.06); }
+  50% { box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.1), 0 4px 16px rgba(139, 0, 0, 0.1); }
+}
+
+@keyframes menuDotsPop {
+  0% { transform: scale(0.6); opacity: 0.4; }
+  45% { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes dropdownSpring {
+  0% { opacity: 0; transform: translateY(-10px) scale(0.88); }
+  70% { opacity: 1; transform: translateY(2px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes balloonEdge {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.35), 0 0 0 8px rgba(139, 0, 0, 0.12),
+      0 18px 45px rgba(139, 0, 0, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 80, 100, 0.45), 0 0 0 14px rgba(139, 0, 0, 0.08),
+      0 24px 55px rgba(139, 0, 0, 0.35);
+  }
+}
+
+.animate-view { animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+.hero-animated {
+  background: linear-gradient(135deg, #8B0000 0%, #a52a2a 40%, #5d0000 80%, #8B0000 100%);
+  background-size: 200% 200%;
+  animation: heroGradient 8s ease infinite, heroShine 4s ease-in-out infinite;
+}
+
+.info-card { 
+    background: var(--card-bg); padding: 25px; border-radius: 20px; 
+    border: 1px solid var(--border-color); text-align: right; 
+    line-height: 1.6; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    cursor: default;
+}
+body.en-mode .info-card { text-align: left; }
+
+.info-card:hover {
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: 0 15px 30px rgba(139, 0, 0, 0.15);
+    border-color: var(--accent-color);
+}
+
+.hero-box { 
+    color: white; 
+    padding: 60px; border-radius: 35px; margin-bottom: 40px; 
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
+    text-align: center; 
+}
+.hero-box:hover { transform: scale(1.02) translateY(-4px); }
+
+/* شبكة الرئيسية: 3 × 3 */
+.info-grid-welcome {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.info-grid-welcome .info-card {
+  opacity: 0;
+  animation: fadeInScale 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-fill-mode: forwards;
+}
+
+.info-grid-welcome .info-card:nth-child(1) { animation-delay: 0.08s; }
+.info-grid-welcome .info-card:nth-child(2) { animation-delay: 0.14s; }
+.info-grid-welcome .info-card:nth-child(3) { animation-delay: 0.2s; }
+.info-grid-welcome .info-card:nth-child(4) { animation-delay: 0.28s; }
+.info-grid-welcome .info-card:nth-child(5) { animation-delay: 0.34s; }
+.info-grid-welcome .info-card:nth-child(6) { animation-delay: 0.4s; }
+.info-grid-welcome .info-card:nth-child(7) { animation-delay: 0.48s; }
+.info-grid-welcome .info-card:nth-child(8) { animation-delay: 0.54s; }
+.info-grid-welcome .info-card:nth-child(9) { animation-delay: 0.6s; }
+
+@media (max-width: 992px) {
+  .info-grid-welcome { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .info-grid-welcome { grid-template-columns: 1fr; }
+}
+
+nav {
+  background: #5d0000; color: white; padding: 12px 25px;
+  display: none; gap: 20px; position: sticky; top: 0; z-index: 1000;
+  align-items: center;
+}
+.nav-brand { font-weight: bold; font-size: 18px; margin-left: auto; border-right: 2px solid rgba(255,255,255,0.3); padding-right: 15px; }
+body.en-mode .nav-brand { margin-left: 0; margin-right: auto; border-right: none; border-left: 2px solid rgba(255,255,255,0.3); padding-left: 15px; }
+
+.nav-ftk { font-size: 12px; opacity: 0.8; }
+body.en-mode .nav-ftk { margin-left: auto; }
+
+nav button { background: rgba(255,255,255,0.1); border: none; color: white; padding: 10px 20px; cursor: pointer; border-radius: 8px; transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease; font-weight: 500; }
+nav button:hover {
+  background: rgba(255,255,255,0.22);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+nav button:active { transform: translateY(0); }
+header { background: var(--header-bg); color: white; padding: 20px; font-size: 26px; text-align: center; font-weight: bold; display: none; }
+.container { display: none; }
+.sidebar { width: 280px; background: var(--sidebar-bg); min-height: 100vh; border-left: 1px solid var(--border-color); padding: 25px 15px; position: sticky; top: 60px; }
+body.en-mode .sidebar { border-left: none; border-right: 1px solid var(--border-color); }
+.sidebar button { width: 100%; padding: 14px 18px; border: none; background: transparent; color: var(--text-color); cursor: pointer; font-size: 16px; border-radius: 10px; text-align: right; margin-bottom: 8px; transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; display: flex; align-items: center; gap: 10px; }
+body.en-mode .sidebar button { text-align: left; }
+.sidebar button:hover { background: var(--hover-color); color: var(--accent-color); transform: translateX(-5px); box-shadow: 0 4px 14px rgba(139, 0, 0, 0.1); }
+body.en-mode .sidebar button:hover { transform: translateX(5px); }
+@keyframes sidebarActiveGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.95), 0 0 18px rgba(220, 53, 69, 0.4), inset 0 0 14px rgba(220, 53, 69, 0.06);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(255, 90, 90, 1), 0 0 26px rgba(220, 53, 69, 0.55), inset 0 0 18px rgba(220, 53, 69, 0.1);
+  }
+}
+
+.sidebar button[data-nav].sidebar-active {
+  position: relative;
+  border: 2px solid #e53935 !important;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.2), rgba(139, 0, 0, 0.12)) !important;
+  color: #8B0000;
+  font-weight: 700;
+  animation: sidebarActiveGlow 2.2s ease-in-out infinite;
+}
+
+.dark-mode .sidebar button[data-nav].sidebar-active {
+  color: #ff8a8a;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.25), rgba(80, 0, 0, 0.35)) !important;
+}
+
+.sidebar button[data-nav].sidebar-active:hover {
+  transform: translateX(-5px);
+}
+body.en-mode .sidebar button[data-nav].sidebar-active:hover {
+  transform: translateX(5px);
+}
+
+.settings-credits {
+  margin-top: 20px;
+  padding: 16px 18px;
+  font-size: 12px;
+  line-height: 1.75;
+  color: #555;
+  font-style: italic;
+  white-space: pre-line;
+  background-color: #f3f3f3;
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 27px,
+    rgba(180, 180, 180, 0.35) 27px,
+    rgba(180, 180, 180, 0.35) 28px
+  );
+  border: 1px dashed #aaa;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.dark-mode .settings-credits {
+  color: #bbb;
+  background-color: #252525;
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 27px,
+    rgba(255, 255, 255, 0.06) 27px,
+    rgba(255, 255, 255, 0.06) 28px
+  );
+  border-color: #555;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.content { flex: 1; padding: 40px; }
+.form-card { background: var(--card-bg); padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); max-width: 900px; margin: auto; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-group { margin-bottom: 25px; display: flex; flex-direction: column; }
+input, select, textarea { padding: 14px; border: 1.5px solid var(--border-color); border-radius: 12px; background: var(--card-bg); color: var(--text-color); transition: 0.3s; }
+.save-btn { background: var(--accent-color); color: white; border: none; padding: 18px; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: bold; width: 100%; transition: 0.3s; }
+.view-row { margin-bottom: 15px; padding: 12px; background: var(--bg-color); border-radius: 10px; border-right: 4px solid var(--accent-color); }
+body.en-mode .view-row { border-right: none; border-left: 4px solid var(--accent-color); }
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; justify-content: center; }
+
+/* إطار بالون أحمر — صفحة إضافة مريض جديد فقط */
+.form-card.form-card-add-patient {
+  border: 4px solid #dc3545;
+  border-radius: 28px;
+  position: relative;
+  animation: balloonEdge 2.8s ease-in-out infinite;
+  overflow: visible;
+}
+
+.form-card.form-card-add-patient::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  border-radius: 32px;
+  border: 2px dashed rgba(220, 53, 69, 0.55);
+  pointer-events: none;
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+.form-card.form-card-add-patient h2 {
+  display: inline-block;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.12), rgba(139, 0, 0, 0.08));
+  border: 2px solid rgba(220, 53, 69, 0.65);
+  margin-bottom: 24px;
+  box-shadow: 0 4px 18px rgba(220, 53, 69, 0.2);
+}
+table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+
+/* لون الصف المميز بالحقنة */
+tr.injection-marked td {
+    background: var(--injection-bg) !important;
+}
+
+table td { background: var(--card-bg); padding: 15px; border-top: 1px solid var(--border-color); transition: 0.3s; }
+.settings-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--bg-color); border-radius: 12px; margin-bottom: 10px; }
+
+.developer-footer {
+    margin-top: 25px; font-size: 12px; line-height: 1.5; color: #777; border-top: 1px solid var(--border-color); padding-top: 15px;
+}
+
+/* تنسيق شريط البحث مع التصنيف */
+.search-filter-container {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: flex-end;
+}
+.search-filter-container .form-group { margin-bottom: 0; flex: 1; }
+.search-filter-container .form-group:first-child {
+  animation: searchReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.filter-box {
+  width: 200px;
+  animation: filterReveal 0.6s cubic-bezier(0.34, 1.2, 0.64, 1) 0.1s backwards;
+  padding: 10px 12px 12px;
+  border-radius: 14px;
+  background: rgba(139, 0, 0, 0.04);
+  border: 1px solid rgba(139, 0, 0, 0.12);
+  transition: background 0.35s ease, border-color 0.35s ease;
+}
+.filter-box:focus-within {
+  background: rgba(139, 0, 0, 0.07);
+  border-color: rgba(139, 0, 0, 0.28);
+}
+
+body.en-mode .search-filter-container .form-group:first-child {
+  animation-name: searchRevealEn;
+}
+@keyframes searchRevealEn {
+  from { opacity: 0; transform: translateX(-22px) scale(0.98); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+body.en-mode .filter-box {
+  animation-name: filterRevealEn;
+}
+@keyframes filterRevealEn {
+  from { opacity: 0; transform: translateX(28px) rotate(1deg); filter: blur(4px); }
+  to { opacity: 1; transform: translateX(0) rotate(0); filter: blur(0); }
+}
+
+#searchInput {
+  transition: border-color 0.3s ease, box-shadow 0.35s ease, transform 0.3s ease;
+}
+#searchInput:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+#classFilter {
+  cursor: pointer;
+  font-weight: 600;
+  width: 100%;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+.filter-box:hover #classFilter {
+  border-color: rgba(139, 0, 0, 0.45);
+  background: var(--card-bg);
+  animation: filterGlowRing 2.2s ease-in-out infinite;
+}
+#classFilter:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  animation: none;
+  box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.18);
+}
+
+table tbody tr {
+  animation: fadeInUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+table tbody tr:nth-child(1) { animation-delay: 0.03s; }
+table tbody tr:nth-child(2) { animation-delay: 0.06s; }
+table tbody tr:nth-child(3) { animation-delay: 0.09s; }
+table tbody tr:nth-child(4) { animation-delay: 0.12s; }
+table tbody tr:nth-child(5) { animation-delay: 0.15s; }
+table tbody tr:nth-child(n+6) { animation-delay: 0.18s; }
+
+table tbody tr:nth-child(1) .dots-btn { animation-delay: 0.03s; }
+table tbody tr:nth-child(2) .dots-btn { animation-delay: 0.06s; }
+table tbody tr:nth-child(3) .dots-btn { animation-delay: 0.09s; }
+table tbody tr:nth-child(4) .dots-btn { animation-delay: 0.12s; }
+table tbody tr:nth-child(5) .dots-btn { animation-delay: 0.15s; }
+table tbody tr:nth-child(n+6) .dots-btn { animation-delay: 0.18s; }
+
+/* تنسيق قائمة الثلاث نقاط */
+.action-menu { position: relative; display: inline-block; }
+.dots-btn {
+  background: linear-gradient(145deg, rgba(139, 0, 0, 0.08), rgba(139, 0, 0, 0.02));
+  border: 1px solid rgba(139, 0, 0, 0.18);
+  cursor: pointer;
+  color: var(--accent-color);
+  padding: 8px 10px;
+  border-radius: 12px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 40px;
+  min-height: 40px;
+  transition: transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+  animation: menuDotsPop 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+}
+.dots-btn .dots-bar {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 7px 0 currentColor, 0 14px 0 currentColor;
+  transition: transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.dots-btn:hover {
+  background: var(--hover-color);
+  border-color: rgba(139, 0, 0, 0.45);
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(139, 0, 0, 0.15);
+}
+.dots-btn:hover .dots-bar {
+  transform: translateY(-1px);
+  animation: dotsWiggle 0.5s ease-in-out;
+}
+@keyframes dotsWiggle {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-3px); }
+  60% { transform: translateY(1px); }
+}
+.dots-btn:active {
+  transform: scale(0.96);
+}
+.dropdown-content {
+  display: none;
+  position: absolute;
+  left: 0;
+  background-color: var(--card-bg);
+  min-width: 168px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  z-index: 500;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(139, 0, 0, 0.15);
+  transform-origin: top left;
+}
+body.en-mode .dropdown-content { left: auto; right: 0; transform-origin: top right; }
+.dropdown-content button { width: 100%; text-align: right; padding: 12px 16px; border: none; background: none; cursor: pointer; color: var(--text-color); font-size: 14px; transition: background 0.2s ease, padding 0.2s ease; border-bottom: 1px solid var(--border-color); }
+.dropdown-content button:last-child { border-bottom: none; }
+body.en-mode .dropdown-content button { text-align: left; }
+.dropdown-content button:hover { background-color: var(--hover-color); color: var(--accent-color); padding-right: 20px; }
+body.en-mode .dropdown-content button:hover { padding-right: 16px; padding-left: 20px; }
+.dropdown-content.show {
+  display: block;
+  animation: dropdownSpring 0.38s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
+/* إنشاء حساب + إشعار */
+#login-fields-wrap { transition: opacity 0.25s ease; }
+.register-subpanel {
+  text-align: center;
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+.register-subpanel .form-group { margin-bottom: 14px; text-align: right; }
+body.en-mode .register-subpanel .form-group { text-align: left; }
+.register-subpanel label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-color);
+}
+.register-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.register-actions .save-btn { margin-top: 0; }
+.link-like-btn {
+  background: none;
+  border: none;
+  color: var(--accent-color);
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: underline;
+  padding: 4px;
+}
+#register-code-msg, #register-account-msg {
+  min-height: 22px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.auth-toast {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  max-width: 320px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  z-index: 5000;
+  transform: translateX(calc(-100% - 24px));
+  opacity: 0;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+  pointer-events: none;
+}
+body.en-mode .auth-toast {
+  left: auto;
+  right: 24px;
+  transform: translateX(calc(100% + 24px));
+}
+.auth-toast--ok {
+  background: linear-gradient(135deg, #1b5e20, #2e7d32);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.auth-toast--err {
+  background: linear-gradient(135deg, #b71c1c, #c62828);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.auth-toast--show {
+  transform: translateX(0);
+  opacity: 1;
+}
+body.en-mode .auth-toast--show {
+  transform: translateX(0);
+}
+.auth-toast--hide {
+  transform: translateX(calc(-100% - 40px));
+  opacity: 0;
+}
+body.en-mode .auth-toast--hide {
+  transform: translateX(calc(100% + 40px));
+}
+
+.support-chat-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-color);
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.22);
+  z-index: 1001;
+}
+.support-chat-box {
+  position: fixed;
+  right: 20px;
+  bottom: 90px;
+  width: min(92vw, 340px);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 16px 35px rgba(0,0,0,0.25);
+  z-index: 1001;
+  display: none;
+}
+.support-chat-box textarea { min-height: 72px; resize: vertical; }
+.support-chat-log {
+  max-height: 170px;
+  overflow: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 8px;
+  margin-bottom: 10px;
+  background: var(--bg-color);
+}
+.support-msg {
+  margin-bottom: 7px;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.support-msg.user { background: rgba(46,125,50,0.12); }
+.support-msg.admin { background: rgba(139,0,0,0.12); }
+.support-chat-actions { display:flex; gap:8px; }
+.support-chat-actions button { flex:1; }
+
+.appointments-branch-pick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-width: 620px;
+}
+.appointments-slot-row {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(68px, 1fr));
+  gap: 8px;
+  margin: 10px 0 16px;
+}
+.appointments-slot-row input {
+  padding: 8px;
+  font-size: 12px;
+  text-align: center;
+}
+.appointments-grid-wrap { overflow-x: auto; }
+.appointments-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+.appointments-grid th,
+.appointments-grid td {
+  border: 1px solid var(--border-color);
+  padding: 6px;
+  text-align: center;
+  vertical-align: top;
+  min-width: 110px;
+}
+.appointments-grid .time-col {
+  width: 84px;
+  min-width: 84px;
+  border-right: 2px solid var(--accent-color);
+  background: var(--bg-color);
+}
+.appointments-cell {
+  min-height: 54px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+.appointments-cell.drag-over {
+  background: rgba(139, 0, 0, 0.1);
+}
+.appointment-chip {
+  background: rgba(46, 125, 50, 0.15);
+  border: 1px solid rgba(46, 125, 50, 0.4);
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 12px;
+  cursor: move;
+  user-select: none;
+  white-space: pre-line;
+}
+.appointment-chip .status-tag {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.appointment-chip.status-present { background: rgba(56, 142, 60, 0.2); border-color: rgba(56, 142, 60, 0.55); }
+.appointment-chip.status-postponed { background: rgba(255, 193, 7, 0.22); border-color: rgba(255, 193, 7, 0.65); }
+.appointment-chip.status-absent { background: rgba(244, 67, 54, 0.2); border-color: rgba(244, 67, 54, 0.6); }
+.appointment-status-pop {
+  position: fixed;
+  z-index: 5000;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+  display: none;
+}
+.appointment-status-pop button {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 5px 8px;
+  text-align: right;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.appointment-status-pop button:hover { background: var(--hover-color); }
+.appointments-summary {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 8px;
+}
+.appointments-summary .summary-card {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 8px;
+  text-align: center;
+  font-size: 12px;
+}
+.summary-card .summary-toggle {
+  margin-top: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--accent-color);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+.summary-list {
+  margin-top: 6px;
+  text-align: right;
+  font-size: 11px;
+  max-height: 120px;
+  overflow: auto;
+  padding: 0 4px;
+}
+.history-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.history-week-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.history-week-title {
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  flex: 1;
+}
+.history-arrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--accent-color);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.history-arrow-btn:hover {
+  background: var(--hover-color);
+}
+.history-week-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+.history-week-grid th, .history-week-grid td {
+  border: 1px solid var(--border-color);
+  vertical-align: top;
+  min-width: 130px;
+  padding: 6px;
+}
+.history-cell-item {
+  border-radius: 8px;
+  padding: 6px;
+  margin-bottom: 6px;
+  background: var(--bg-color);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 6000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: var(--card-bg);
+  color: var(--text-color);
+  max-width: 440px;
+  width: 100%;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--border-color);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.modal-box h3 { margin-top: 0; color: var(--accent-color); }
+.patient-readonly-banner {
+  background: rgba(139, 0, 0, 0.08);
+  border: 1px solid rgba(139, 0, 0, 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.accounts-actions-cell { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
+body.en-mode .accounts-actions-cell { justify-content: flex-end; }
+
+/* إظهار كلمة المرور / الكود — زر علامة صح مع توهج */
+.password-input-wrap {
+  position: relative;
+  width: 100%;
+}
+.password-input-wrap .pw-target-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding-inline-end: 50px !important;
+}
+.pw-reveal-toggle {
+  position: absolute;
+  inset-inline-end: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 11px;
+  border: 2px solid var(--border-color);
+  background: var(--card-bg);
+  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.35s ease;
+  margin: 0;
+}
+.pw-reveal-cb {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+.pw-reveal-face {
+  font-size: 17px;
+  font-weight: 800;
+  color: #aaa;
+  line-height: 1;
+  user-select: none;
+  transition: color 0.25s ease, transform 0.2s ease;
+}
+.pw-reveal-toggle:hover .pw-reveal-face {
+  color: var(--accent-color);
+}
+.pw-reveal-toggle.pw-reveal-active {
+  border-color: rgba(46, 125, 50, 0.9);
+  background: rgba(46, 125, 50, 0.14);
+  box-shadow: 0 0 14px rgba(46, 125, 50, 0.5), 0 0 26px rgba(46, 125, 50, 0.22);
+  animation: pwRevealGlow 1.6s ease-in-out infinite alternate;
+}
+.pw-reveal-toggle.pw-reveal-active .pw-reveal-face {
+  color: #1b5e20;
+  transform: scale(1.08);
+}
+@keyframes pwRevealGlow {
+  from { box-shadow: 0 0 10px rgba(46, 125, 50, 0.35), 0 0 18px rgba(46, 125, 50, 0.15); }
+  to { box-shadow: 0 0 20px rgba(46, 125, 50, 0.55), 0 0 32px rgba(46, 125, 50, 0.28); }
+}
+.pw-reveal-toggle:focus-within {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+.dark-mode .pw-reveal-toggle.pw-reveal-active .pw-reveal-face {
+  color: #81c784;
+}
+.dark-mode .pw-reveal-toggle.pw-reveal-active {
+  border-color: rgba(129, 199, 132, 0.85);
+  background: rgba(46, 125, 50, 0.22);
+}
+</style>
+</head>
+<body id="body">
+
+<div id="auth-toast" class="auth-toast" role="status" aria-live="polite"></div>
+
+<button id="support-chat-fab" class="support-chat-fab" type="button" onclick="toggleSupportChatWidget()" title="الدعم">💬</button>
+<div id="support-chat-box" class="support-chat-box">
+    <h4 style="margin:0 0 10px;">شات الدعم</h4>
+    <div id="support-chat-identity" style="margin-bottom:10px;">
+        <input type="text" id="support-chat-id" placeholder="اكتب ID الحساب (5 أرقام) أو رقم الهاتف">
+        <button type="button" class="save-btn" style="margin-top:8px;padding:10px 14px;font-size:14px;" onclick="verifySupportChatIdentity()">تحقق وفتح الشات</button>
+    </div>
+    <div id="support-chat-compose" style="display:none;">
+        <div id="support-chat-log" class="support-chat-log"></div>
+        <textarea id="support-chat-text" placeholder="اكتب رسالتك للدعم"></textarea>
+        <div class="support-chat-actions" style="margin-top:8px;">
+            <button type="button" class="save-btn" style="padding:10px 14px;font-size:14px;" onclick="sendSupportWidgetMessage()">إرسال</button>
+            <button type="button" class="link-like-btn" onclick="resetSupportChatIdentity()">تغيير ID</button>
+        </div>
+    </div>
+    <p id="support-chat-msg" style="color:var(--danger-color);min-height:18px;font-size:12px;margin-top:8px;"></p>
+</div>
+
+<div id="account-detail-modal" class="modal-overlay" onclick="if(event.target===this)closeAccountDetailModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <h3 data-i18n="accounts_modal_title">بيانات الحساب</h3>
+        <div id="account-detail-body" style="line-height:1.7;font-size:15px;"></div>
+        <button type="button" class="save-btn" style="margin-top:18px;" onclick="closeAccountDetailModal()" data-i18n="accounts_modal_close">إغلاق</button>
+    </div>
+</div>
+
+<div id="login-screen">
+    <div class="login-card animate-view">
+        <div class="lang-switch-login">
+            <button class="btn-small" style="background:var(--accent-color); font-size:10px; color:white; border:none; border-radius:5px; cursor:pointer; padding:5px 10px;" onclick="toggleLanguage()">EN/عربي</button>
+        </div>
+        <h2 style="color: var(--accent-color); margin-bottom: 10px;" data-i18n="header_title">عيادة دكتور أحمد وجيه</h2>
+        <p style="margin-bottom: 25px; opacity: 0.7;" data-i18n="login_msg">يرجى تسجيل الدخول للمتابعة</p>
+        
+        <div id="login-fields-wrap">
+            <div class="form-group">
+                <input type="text" id="username" placeholder="اسم المستخدم">
+            </div>
+            <div class="form-group">
+                <div class="password-input-wrap">
+                    <input type="password" class="pw-target-input" id="password" placeholder="كلمة المرور" autocomplete="current-password">
+                    <label class="pw-reveal-toggle">
+                        <input type="checkbox" class="pw-reveal-cb" autocomplete="off" onchange="togglePasswordReveal(this)">
+                        <span class="pw-reveal-face" aria-hidden="true">✓</span>
+                    </label>
+                </div>
+            </div>
+            <button id="login-submit-btn" class="save-btn" onclick="handleLogin()" data-i18n="login_btn">دخول</button>
+        </div>
+
+        <div id="register-code-section" class="register-subpanel" style="display:none;">
+            <p style="font-size:14px; margin-bottom:12px; opacity:0.9;" data-i18n="register_code_prompt">أدخل كود الأمان لإنشاء حساب</p>
+            <div class="form-group">
+                <div class="password-input-wrap">
+                    <input type="password" class="pw-target-input" id="register-secret-input" inputmode="numeric" autocomplete="off" placeholder="">
+                    <label class="pw-reveal-toggle">
+                        <input type="checkbox" class="pw-reveal-cb" autocomplete="off" onchange="togglePasswordReveal(this)">
+                        <span class="pw-reveal-face" aria-hidden="true">✓</span>
+                    </label>
+                </div>
+            </div>
+            <div class="register-actions">
+                <button type="button" id="register-code-btn" class="save-btn" onclick="verifyRegisterCode()" data-i18n="register_verify_btn">تأكيد الكود</button>
+                <button type="button" class="link-like-btn" onclick="backToLoginFromRegister()" data-i18n="register_back_login">العودة لتسجيل الدخول</button>
+            </div>
+            <p id="register-code-msg" style="color:var(--danger-color);"></p>
+        </div>
+
+        <div id="register-account-section" class="register-subpanel" style="display:none;">
+            <p style="font-size:14px; margin-bottom:12px;" data-i18n="register_form_title">بيانات الحساب الجديد</p>
+            <div class="form-group">
+                <label for="reg-username" data-i18n="register_label_user">اسم المستخدم</label>
+                <input type="text" id="reg-username" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="reg-phone" data-i18n="register_label_phone">رقم التسجيل (11 رقماً)</label>
+                <input type="tel" id="reg-phone" maxlength="11" inputmode="numeric" autocomplete="tel" placeholder="">
+            </div>
+            <div class="form-group">
+                <label for="reg-gender">النوع</label>
+                <select id="reg-gender">
+                    <option value="">-- اختر --</option>
+                    <option value="ذكر">ذكر</option>
+                    <option value="أنثى">أنثى</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reg-role">نوع الحساب</label>
+                <select id="reg-role">
+                    <option value="">-- اختر --</option>
+                    <option value="دكتور">دكتور</option>
+                    <option value="مريض">مريض</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reg-password" data-i18n="register_label_pass">كلمة المرور</label>
+                <div class="password-input-wrap">
+                    <input type="password" class="pw-target-input" id="reg-password" autocomplete="new-password">
+                    <label class="pw-reveal-toggle">
+                        <input type="checkbox" class="pw-reveal-cb" autocomplete="off" onchange="togglePasswordReveal(this)">
+                        <span class="pw-reveal-face" aria-hidden="true">✓</span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="reg-password2" data-i18n="register_label_pass2">تأكيد كلمة المرور</label>
+                <div class="password-input-wrap">
+                    <input type="password" class="pw-target-input" id="reg-password2" autocomplete="new-password">
+                    <label class="pw-reveal-toggle">
+                        <input type="checkbox" class="pw-reveal-cb" autocomplete="off" onchange="togglePasswordReveal(this)">
+                        <span class="pw-reveal-face" aria-hidden="true">✓</span>
+                    </label>
+                </div>
+            </div>
+            <div class="register-actions">
+                <button type="button" class="save-btn" onclick="submitNewAccount()" data-i18n="register_submit_btn">إنشاء الحساب</button>
+                <button type="button" class="link-like-btn" onclick="backToRegisterCode()" data-i18n="register_back_code">رجوع لكود الأمان</button>
+            </div>
+            <p id="register-account-msg" style="color:var(--danger-color);"></p>
+        </div>
+        
+        <div id="patient-portal-section" class="register-subpanel" style="display:none;">
+            <p style="font-size:14px; margin-bottom:12px;" data-i18n="patient_portal_title">متابعة الحالة (للمريض)</p>
+            <p style="font-size:12px; opacity:0.85; margin-bottom:10px;" data-i18n="patient_portal_prompt">أدخل رقم المعرّف (ID) الظاهر بجانب اسمك في قائمة المرضى لدى العيادة</p>
+            <div class="form-group">
+                <input type="text" id="patient-portal-id" inputmode="numeric" autocomplete="off" placeholder="">
+            </div>
+            <div class="register-actions">
+                <button type="button" class="save-btn" onclick="submitPatientPortalLookup()" data-i18n="patient_portal_btn">عرض حالتي</button>
+                <button type="button" class="link-like-btn" onclick="backFromPatientPortalToLogin()" data-i18n="patient_portal_back">رجوع</button>
+            </div>
+            <p id="patient-portal-msg" style="color:var(--danger-color); min-height:20px; margin-top:10px; font-size:13px; font-weight:600;"></p>
+        </div>
+        <div id="patient-portal-result" style="display:none; margin-top:16px; text-align:right;"></div>
+
+        <div id="login-links-row" style="margin-top:15px; line-height:1.8;">
+            <a href="javascript:void(0)" onclick="forgotPassword()" style="font-size:13px; color:var(--accent-color); text-decoration:none;" data-i18n="forgot_pass">نسيت كلمة المرور؟</a>
+            <span style="opacity:0.4; margin:0 6px;">|</span>
+            <a href="javascript:void(0)" onclick="showRegisterCodeStep()" style="font-size:13px; color:var(--accent-color); text-decoration:none;" data-i18n="register_link">إنشاء حساب جديد</a>
+            <span style="opacity:0.4; margin:0 6px;">|</span>
+            <a href="javascript:void(0)" onclick="showPatientPortalStep()" style="font-size:13px; color:var(--accent-color); text-decoration:none;" data-i18n="patient_portal_link">مريض؟ تابع حالتك</a>
+        </div>
+        
+        <p id="login-error" style="color: var(--danger-color); margin-top: 15px; font-size: 14px; font-weight:bold;"></p>
+
+        <div class="developer-footer">
+            تم إنشاء هذا الموقع عن طريق شركة <strong>FTK</strong><br>
+            القائم على هذا المشروع مهندس <strong>محمد خالد</strong>
+        </div>
+    </div>
+</div>
+
+<nav id="main-nav">
+    <button onclick="showWelcome()" data-i18n="nav_home">الرئيسية</button>
+    <button onclick="showPatients()" data-i18n="nav_manage">إدارة المرضى</button>
+    <div class="nav-ftk" id="nav-ftk-text">تم إنشاءه بواسطة شركة FTK</div>
+    <div class="nav-brand" data-i18n="dr_name">دكتور أحمد وجيه</div>
+</nav>
+
+<header id="main-header" data-i18n="header_title">عيادة دكتور أحمد وجيه</header>
+
+<div class="container" id="main-container">
+    <div class="sidebar">
+        <h3 style="text-align:center; margin-bottom: 25px; margin-top: 20px;" data-i18n="dr_name">دكتور أحمد وجيه</h3>
+        <button type="button" data-nav="home" onclick="showWelcome()"><span data-i18n="side_home">🏠 الرئيسية</span></button>
+        <button type="button" data-nav="patients" onclick="showPatients()"><span data-i18n="side_list">👥 قائمة المرضى</span></button>
+        <button type="button" data-nav="add" onclick="addPatientPage()"><span data-i18n="side_add">➕ إضافة مريض جديد</span></button>
+        <button type="button" data-nav="settings" onclick="showSettings()"><span data-i18n="side_settings">⚙️ الإعدادات</span></button>
+        <button type="button" data-nav="chat" onclick="showChatCenter()"><span>💬 الشات</span></button>
+        <button type="button" data-nav="appointments" onclick="showAppointmentsChoice()"><span>📅 المواعيد</span></button>
+        <button type="button" data-nav="appointments-history" onclick="showAppointmentsHistory()"><span>🗂️ المواعيد السابقة</span></button>
+        <button type="button" data-nav="profile" onclick="showAccountSettings()"><span>👤 إعدادات الحساب</span></button>
+        <button type="button" id="sidebar-manage-accounts" data-nav="accounts" onclick="showManageAccounts()" style="display:none;"><span data-i18n="side_accounts">👤 إدارة الحسابات</span></button>
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+        <button onclick="logout()" style="color: var(--danger-color);"><span data-i18n="side_logout">🚪 تسجيل الخروج</span></button>
+    </div>
+
+    <div class="content" id="content"></div>
+</div>
+
+<script>
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "1234";
+const REG_SECRET_CODE = "112233";
+const USERS_STORAGE_KEY = "clinic_registered_users";
+const PATIENTS_STORAGE_KEY = "clinic_patients_v1";
+const REG_LOCK_UNTIL_KEY = "clinic_reg_lock_until";
+const REG_LOCK_TIER_KEY = "clinic_reg_lock_tier";
+const REG_FAIL_STREAK_KEY = "clinic_reg_fail_streak";
+const EXTRA_ADMINS_KEY = "clinic_extra_admins";
+const SUPPORT_CHATS_KEY = "clinic_support_chats_v1";
+const APPOINTMENTS_STORAGE_KEY = "clinic_appointments_v1";
+const APPOINTMENTS_ARCHIVE_KEY = "clinic_appointments_archive_v1";
+const APPOINTMENT_DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
+
+let dragAppointmentSource = null;
+let appointmentStatusTarget = null;
+let historyWeekOffset = 0;
+let historyBranchKey = "";
+
+let loginAttempts = 0;
+let isLocked = false;
+let registerLockTimerId = null;
+/** اسم المستخدم للجلسة الحالية (بعد تسجيل الدخول) */
+let currentSessionUser = null;
+
+function getExtraAdmins() {
+    try {
+        const raw = localStorage.getItem(EXTRA_ADMINS_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) return [];
+        return arr.map(function (x) { return String(x).toLowerCase().trim(); }).filter(Boolean);
+    } catch (e) { return []; }
+}
+
+function saveExtraAdmins(arr) {
+    const clean = arr.map(function (x) { return String(x).toLowerCase().trim(); }).filter(function (x) { return x && x !== ADMIN_USER.toLowerCase(); });
+    localStorage.setItem(EXTRA_ADMINS_KEY, JSON.stringify(clean));
+}
+
+function removeExtraAdmin(username) {
+    const n = (username || "").trim().toLowerCase();
+    saveExtraAdmins(getExtraAdmins().filter(function (x) { return x !== n; }));
+}
+
+function addExtraAdmin(username) {
+    const n = (username || "").trim().toLowerCase();
+    if (!n || n === ADMIN_USER.toLowerCase()) return false;
+    const exists = getRegisteredUsers().some(function (x) { return (x.username || "").trim().toLowerCase() === n; });
+    if (!exists) return false;
+    const list = getExtraAdmins();
+    if (list.indexOf(n) >= 0) return false;
+    list.push(n);
+    saveExtraAdmins(list);
+    return true;
+}
+
+function isAdminSession() {
+    const u = (currentSessionUser || "").trim().toLowerCase();
+    if (u === ADMIN_USER.toLowerCase()) return true;
+    return getExtraAdmins().indexOf(u) >= 0;
+}
+
+function normalizePhoneDigits(s) {
+    return String(s || "").replace(/\D/g, "");
+}
+
+function isValidRegPhone11(s) {
+    return normalizePhoneDigits(s).length === 11;
+}
+
+function isPhoneTaken(phoneDigits) {
+    const d = normalizePhoneDigits(phoneDigits);
+    if (d.length !== 11) return false;
+    return getRegisteredUsers().some(function (x) { return normalizePhoneDigits(x.phone || "") === d; });
+}
+
+function applySidebarForRole() {
+    const btn = document.getElementById("sidebar-manage-accounts");
+    if (!btn) return;
+    if (isAdminSession()) {
+        btn.style.display = "flex";
+    } else {
+        btn.style.display = "none";
+        btn.classList.remove("sidebar-active");
+    }
+}
+
+function escapeHtml(str) {
+    if (str == null) return "";
+    const d = document.createElement("div");
+    d.textContent = String(str);
+    return d.innerHTML;
+}
+
+function togglePasswordReveal(checkbox) {
+    const label = checkbox.closest(".pw-reveal-toggle");
+    const wrap = checkbox.closest(".password-input-wrap");
+    const input = wrap ? wrap.querySelector("input.pw-target-input") : null;
+    if (!input) return;
+    input.type = checkbox.checked ? "text" : "password";
+    if (label) label.classList.toggle("pw-reveal-active", checkbox.checked);
+}
+
+function resetPasswordRevealStates() {
+    document.querySelectorAll("#login-screen .pw-reveal-cb").forEach(function (cb) {
+        cb.checked = false;
+        const label = cb.closest(".pw-reveal-toggle");
+        if (label) label.classList.remove("pw-reveal-active");
+        const wrap = cb.closest(".password-input-wrap");
+        const inp = wrap ? wrap.querySelector("input.pw-target-input") : null;
+        if (inp) inp.type = "password";
+    });
+}
+
+function getRegisteredUsers() {
+    try {
+        const raw = localStorage.getItem(USERS_STORAGE_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) return [];
+        return arr.map(function (x) {
+            return {
+                id: x.id != null ? String(x.id) : "",
+                username: x.username,
+                password: x.password,
+                phone: x.phone != null ? String(x.phone) : "",
+                gender: x.gender || "",
+                role: x.role || ""
+            };
+        });
+    } catch (e) { return []; }
+}
+
+function saveRegisteredUsers(arr) {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(arr));
+}
+
+function readRegLockUntil() {
+    const v = parseInt(localStorage.getItem(REG_LOCK_UNTIL_KEY) || "0", 10);
+    return isNaN(v) ? 0 : v;
+}
+
+function readRegTier() {
+    const v = parseInt(localStorage.getItem(REG_LOCK_TIER_KEY) || "0", 10);
+    return isNaN(v) ? 0 : v;
+}
+
+function readRegFailStreak() {
+    const v = parseInt(localStorage.getItem(REG_FAIL_STREAK_KEY) || "0", 10);
+    return isNaN(v) ? 0 : v;
+}
+
+function writeRegLockState(lockUntil, tier, failStreak) {
+    localStorage.setItem(REG_LOCK_UNTIL_KEY, String(lockUntil));
+    localStorage.setItem(REG_LOCK_TIER_KEY, String(tier));
+    localStorage.setItem(REG_FAIL_STREAK_KEY, String(failStreak));
+}
+
+function getLockDurationSecForTier(tier) {
+    const idx = Math.min(Math.max(tier, 0), 2);
+    return [30, 60, 300][idx];
+}
+
+function isRegisterCodeLocked() {
+    return Date.now() < readRegLockUntil();
+}
+
+function formatRegCountdown(ms) {
+    const total = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    if (m > 0) return m + ":" + String(s).padStart(2, "0");
+    return total + t("seconds");
+}
+
+function clearRegisterLockTimer() {
+    if (registerLockTimerId) {
+        clearInterval(registerLockTimerId);
+        registerLockTimerId = null;
+    }
+}
+
+function setRegisterCodeFormDisabled(dis) {
+    const btn = document.getElementById("register-code-btn");
+    const inp = document.getElementById("register-secret-input");
+    if (btn) { btn.disabled = dis; btn.style.opacity = dis ? "0.55" : "1"; btn.style.cursor = dis ? "not-allowed" : "pointer"; }
+    if (inp) inp.disabled = dis;
+}
+
+function startRegisterLockCountdown() {
+    clearRegisterLockTimer();
+    setRegisterCodeFormDisabled(true);
+    const msgEl = document.getElementById("register-code-msg");
+    const tick = function () {
+        const until = readRegLockUntil();
+        const left = until - Date.now();
+        if (left <= 0) {
+            clearRegisterLockTimer();
+            setRegisterCodeFormDisabled(false);
+            if (msgEl) msgEl.textContent = "";
+            writeRegLockState(0, readRegTier(), 0);
+            return;
+        }
+        if (msgEl) {
+            msgEl.style.color = "var(--danger-color)";
+            msgEl.textContent = t("register_locked") + formatRegCountdown(left);
+        }
+    };
+    tick();
+    registerLockTimerId = setInterval(tick, 300);
+}
+
+function onWrongRegisterCode() {
+    const streak = readRegFailStreak() + 1;
+    const msgEl = document.getElementById("register-code-msg");
+    if (streak >= 3) {
+        const tier = readRegTier();
+        const sec = getLockDurationSecForTier(tier);
+        const lockUntil = Date.now() + sec * 1000;
+        writeRegLockState(lockUntil, tier + 1, 0);
+        startRegisterLockCountdown();
+        if (msgEl) {
+            msgEl.style.color = "var(--danger-color)";
+            msgEl.textContent = t("register_locked") + formatRegCountdown(sec * 1000);
+        }
+    } else {
+        writeRegLockState(readRegLockUntil(), readRegTier(), streak);
+        if (msgEl) {
+            msgEl.style.color = "var(--danger-color)";
+            msgEl.textContent = t("register_wrong") + " (" + streak + "/3)";
+        }
+    }
+}
+
+function showRegisterCodeStep() {
+    resetPasswordRevealStates();
+    document.getElementById("login-error").textContent = "";
+    document.getElementById("login-fields-wrap").style.display = "none";
+    document.getElementById("login-links-row").style.display = "none";
+    document.getElementById("patient-portal-section").style.display = "none";
+    document.getElementById("patient-portal-result").style.display = "none";
+    document.getElementById("patient-portal-result").innerHTML = "";
+    document.getElementById("register-account-section").style.display = "none";
+    document.getElementById("register-code-section").style.display = "block";
+    document.getElementById("register-secret-input").value = "";
+    const cm = document.getElementById("register-code-msg");
+    if (cm) cm.textContent = "";
+    if (isRegisterCodeLocked()) startRegisterLockCountdown();
+    else {
+        clearRegisterLockTimer();
+        setRegisterCodeFormDisabled(false);
+    }
+}
+
+function backToLoginFromRegister() {
+    resetPasswordRevealStates();
+    clearRegisterLockTimer();
+    document.getElementById("register-code-section").style.display = "none";
+    document.getElementById("register-account-section").style.display = "none";
+    document.getElementById("patient-portal-section").style.display = "none";
+    document.getElementById("patient-portal-result").style.display = "none";
+    document.getElementById("patient-portal-result").innerHTML = "";
+    document.getElementById("login-fields-wrap").style.display = "block";
+    document.getElementById("login-links-row").style.display = "block";
+    document.getElementById("register-code-msg").textContent = "";
+    document.getElementById("register-account-msg").textContent = "";
+    document.getElementById("register-secret-input").value = "";
+    document.getElementById("patient-portal-msg").textContent = "";
+}
+
+function showPatientPortalStep() {
+    resetPasswordRevealStates();
+    document.getElementById("login-error").textContent = "";
+    document.getElementById("login-fields-wrap").style.display = "none";
+    document.getElementById("login-links-row").style.display = "none";
+    document.getElementById("register-code-section").style.display = "none";
+    document.getElementById("register-account-section").style.display = "none";
+    document.getElementById("patient-portal-result").style.display = "none";
+    document.getElementById("patient-portal-result").innerHTML = "";
+    document.getElementById("patient-portal-section").style.display = "block";
+    document.getElementById("patient-portal-id").value = "";
+    document.getElementById("patient-portal-msg").textContent = "";
+}
+
+function backFromPatientPortalToLogin() {
+    document.getElementById("patient-portal-section").style.display = "none";
+    document.getElementById("patient-portal-result").style.display = "none";
+    document.getElementById("patient-portal-result").innerHTML = "";
+    document.getElementById("login-fields-wrap").style.display = "block";
+    document.getElementById("login-links-row").style.display = "block";
+    document.getElementById("patient-portal-msg").textContent = "";
+}
+
+function lookupPatientByPublicId(raw) {
+    const n = parseInt(String(raw).replace(/^#/, "").trim(), 10);
+    if (isNaN(n)) return null;
+    for (let i = 0; i < patients.length; i++) {
+        if (Number(patients[i].code) === n) return patients[i];
+    }
+    return null;
+}
+
+function buildPatientReadonlyHtml(p) {
+    const fields = [
+        { l: t("table_id"), v: "#" + p.code },
+        { l: t("label_name"), v: p.name },
+        { l: t("label_gender"), v: p.gender },
+        { l: t("label_phone"), v: p.phone },
+        { l: t("label_age"), v: p.age },
+        { l: t("label_regdate"), v: p.regdate },
+        { l: "PMH", v: p.pmh }, { l: "PSH", v: p.psh }, { l: "c/o", v: p.co },
+        { l: "FH", v: p.fh }, { l: "Stress", v: p.stress }, { l: "Physiotherapy", v: p.physio },
+        { l: "Response", v: p.resp1 }, { l: "Number", v: p.num }, { l: "Injection", v: p.inj },
+        { l: "Type", v: p.type }, { l: "Response (Inj)", v: p.resp2 }, { l: "Stairs", v: p.stairs },
+        { l: "WT", v: p.wt }, { l: "Scans", v: p.scans }, { l: "Labs", v: p.labs },
+        { l: "TSH", v: p.tsh }, { l: "CRP", v: p.crp }, { l: "ESR", v: p.esr },
+        { l: "Vit D", v: p.vitd }, { l: "CS", v: p.cs }, { l: "Menopause", v: p.menopause },
+        { l: t("label_required"), v: p.required }
+    ];
+    const ta = document.body.classList.contains("en-mode") ? "left" : "right";
+    let html = "<div class=\"patient-readonly-banner\">" + t("patient_readonly_note") + "</div><div class=\"form-card\" style=\"text-align:" + ta + ";max-width:720px;margin:0 auto;\"><h2 style=\"text-align:center;\">📋 " + escapeHtml(p.name || "") + "</h2><div class=\"form-grid\">";
+    fields.forEach(function (f) {
+        html += "<div class=\"view-row\"><strong>" + escapeHtml(f.l) + ": </strong>" + escapeHtml(f.v != null && f.v !== "" ? String(f.v) : "---") + "</div>";
+    });
+    if (p.attachment) {
+        const srcAttr = String(p.attachment).replace(/"/g, "&quot;");
+        html += "<div class=\"form-group full-width\" style=\"text-align:center;\"><img src=\"" + srcAttr + "\" style=\"max-width:100%;border-radius:15px;border:2px solid var(--accent-color);\" alt=\"\"></div>";
+    }
+    html += "</div><button type=\"button\" class=\"save-btn\" onclick=\"backPatientPortalFromResult()\">" + t("patient_portal_back") + "</button></div>";
+    return html;
+}
+
+function submitPatientPortalLookup() {
+    const raw = document.getElementById("patient-portal-id").value;
+    const msg = document.getElementById("patient-portal-msg");
+    const p = lookupPatientByPublicId(raw);
+    if (!p) {
+        msg.textContent = t("patient_portal_not_found");
+        return;
+    }
+    msg.textContent = "";
+    document.getElementById("patient-portal-section").style.display = "none";
+    const box = document.getElementById("patient-portal-result");
+    box.style.display = "block";
+    box.innerHTML = buildPatientReadonlyHtml(p);
+}
+
+function backPatientPortalFromResult() {
+    document.getElementById("patient-portal-result").style.display = "none";
+    document.getElementById("patient-portal-result").innerHTML = "";
+    document.getElementById("patient-portal-section").style.display = "block";
+    document.getElementById("patient-portal-id").value = "";
+}
+
+function openAccountDetailModal(index) {
+    const list = getRegisteredUsers();
+    const u = list[index];
+    if (!u) return;
+    const phDigits = normalizePhoneDigits(u.phone || "");
+    const phone = phDigits || "—";
+    const mh = document.querySelector("#account-detail-modal h3");
+    if (mh) mh.textContent = t("accounts_modal_title");
+    const body = document.getElementById("account-detail-body");
+    body.innerHTML =
+        "<p><strong>" + t("accounts_field_user") + ":</strong> " + escapeHtml(u.username) + "</p>" +
+        "<p><strong>ID:</strong> #" + escapeHtml(String(u.id || "—")) + "</p>" +
+        "<p><strong>" + t("accounts_field_phone") + ":</strong> " + escapeHtml(String(phone)) + "</p>" +
+        "<p><strong>النوع:</strong> " + escapeHtml(String(u.gender || "—")) + "</p>" +
+        "<p><strong>نوع الحساب:</strong> " + escapeHtml(String(u.role || "—")) + "</p>" +
+        "<p><strong>" + t("accounts_field_pass") + ":</strong> " + escapeHtml(u.password || "—") + "</p>";
+    const closeBtn = document.querySelector("#account-detail-modal .save-btn");
+    if (closeBtn) closeBtn.textContent = t("accounts_modal_close");
+    document.getElementById("account-detail-modal").classList.add("show");
+}
+
+function closeAccountDetailModal() {
+    document.getElementById("account-detail-modal").classList.remove("show");
+}
+
+function assignAdminFromSelect() {
+    const sel = document.getElementById("assign-admin-select");
+    if (!sel || !sel.value) {
+        alert(t("accounts_assign_need_select"));
+        return;
+    }
+    if (addExtraAdmin(sel.value)) {
+        showAuthToast(t("accounts_assigned"), true);
+        showManageAccounts();
+    } else {
+        alert(t("accounts_assign_fail"));
+    }
+}
+
+function revokeExtraAdmin(username) {
+    if (!confirm(t("accounts_revoke_confirm"))) return;
+    removeExtraAdmin(username);
+    showManageAccounts();
+}
+
+function backToRegisterCode() {
+    resetPasswordRevealStates();
+    document.getElementById("register-account-section").style.display = "none";
+    document.getElementById("register-code-section").style.display = "block";
+    document.getElementById("register-account-msg").textContent = "";
+    if (isRegisterCodeLocked()) startRegisterLockCountdown();
+    else {
+        clearRegisterLockTimer();
+        setRegisterCodeFormDisabled(false);
+    }
+}
+
+function verifyRegisterCode() {
+    if (isRegisterCodeLocked()) return;
+    const input = document.getElementById("register-secret-input").value.trim();
+    const msgEl = document.getElementById("register-code-msg");
+    if (input === REG_SECRET_CODE) {
+        writeRegLockState(readRegLockUntil(), readRegTier(), 0);
+        if (msgEl) msgEl.textContent = "";
+        const regSecretInp = document.getElementById("register-secret-input");
+        const secretWrap = regSecretInp && regSecretInp.closest(".password-input-wrap");
+        if (secretWrap) {
+            const cb = secretWrap.querySelector(".pw-reveal-cb");
+            if (cb) {
+                cb.checked = false;
+                togglePasswordReveal(cb);
+            }
+        }
+        document.getElementById("register-code-section").style.display = "none";
+        document.getElementById("register-account-section").style.display = "block";
+        return;
+    }
+    onWrongRegisterCode();
+}
+
+function isUsernameTaken(name) {
+    const n = (name || "").trim().toLowerCase();
+    if (!n) return false;
+    if (n === ADMIN_USER.toLowerCase()) return true;
+    return getRegisteredUsers().some(function (x) { return (x.username || "").trim().toLowerCase() === n; });
+}
+
+function generateAccountId() {
+    const used = {};
+    getRegisteredUsers().forEach(function (u) { if (u.id) used[String(u.id)] = true; });
+    for (let i = 0; i < 3000; i++) {
+        const id = String(Math.floor(10000 + Math.random() * 90000));
+        if (!used[id]) return id;
+    }
+    return String(Date.now()).slice(-5);
+}
+
+function getCurrentAccount() {
+    const u = (currentSessionUser || "").trim().toLowerCase();
+    if (!u || u === ADMIN_USER.toLowerCase()) return null;
+    const list = getRegisteredUsers();
+    for (let i = 0; i < list.length; i++) {
+        if ((list[i].username || "").trim().toLowerCase() === u) return list[i];
+    }
+    return null;
+}
+
+function getSupportMessages() {
+    try {
+        const raw = localStorage.getItem(SUPPORT_CHATS_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+}
+
+function saveSupportMessages(arr) {
+    localStorage.setItem(SUPPORT_CHATS_KEY, JSON.stringify(arr || []));
+}
+
+function sendSupportMessage(fromAccount, text) {
+    const msgs = getSupportMessages();
+    msgs.push({
+        fromId: String(fromAccount.id || ""),
+        fromUser: String(fromAccount.username || ""),
+        fromRole: String(fromAccount.role || ""),
+        fromGender: String(fromAccount.gender || ""),
+        text: String(text || ""),
+        fromAdmin: false,
+        ts: Date.now()
+    });
+    saveSupportMessages(msgs);
+}
+
+let supportWidgetVerifiedId = "";
+
+function resolveAccountByIdOrPhone(query) {
+    const q = String(query || "").trim();
+    if (!q) return null;
+    const phoneDigits = normalizePhoneDigits(q);
+    const users = getRegisteredUsers();
+    for (let i = 0; i < users.length; i++) {
+        const u = users[i];
+        if (/^\d{5}$/.test(q) && String(u.id || "") === q) return u;
+        if (phoneDigits.length === 11 && normalizePhoneDigits(u.phone || "") === phoneDigits) return u;
+    }
+    return null;
+}
+
+function toggleSupportChatWidget() {
+    const box = document.getElementById("support-chat-box");
+    if (!box) return;
+    box.style.display = box.style.display === "block" ? "none" : "block";
+    if (box.style.display === "block") renderSupportWidgetLog();
+}
+
+function verifySupportChatIdentity() {
+    const idEl = document.getElementById("support-chat-id");
+    const msg = document.getElementById("support-chat-msg");
+    const identity = document.getElementById("support-chat-identity");
+    const compose = document.getElementById("support-chat-compose");
+    const query = (idEl && idEl.value ? idEl.value : "").trim();
+    const account = resolveAccountByIdOrPhone(query);
+    if (!account) {
+        msg.textContent = "البيانات غير صحيحة. اكتب ID أو رقم هاتف صحيح.";
+        return;
+    }
+    const current = getCurrentAccount();
+    if (current && String(current.id || "") !== String(account.id || "")) {
+        msg.textContent = "هذا الحساب لا يطابق المستخدم الحالي.";
+        return;
+    }
+    supportWidgetVerifiedId = String(account.id || "");
+    msg.style.color = "var(--accent-color)";
+    msg.textContent = "تم التحقق بنجاح، يمكنك إرسال الرسائل.";
+    if (identity) identity.style.display = "none";
+    if (compose) compose.style.display = "block";
+    renderSupportWidgetLog();
+}
+
+function resetSupportChatIdentity() {
+    supportWidgetVerifiedId = "";
+    const identity = document.getElementById("support-chat-identity");
+    const compose = document.getElementById("support-chat-compose");
+    const msg = document.getElementById("support-chat-msg");
+    if (identity) identity.style.display = "block";
+    if (compose) compose.style.display = "none";
+    if (msg) { msg.style.color = "var(--danger-color)"; msg.textContent = ""; }
+}
+
+function renderSupportWidgetLog() {
+    const log = document.getElementById("support-chat-log");
+    if (!log || !supportWidgetVerifiedId) return;
+    const rows = getSupportMessages().filter(function (m) { return String(m.fromId || "") === supportWidgetVerifiedId; });
+    if (!rows.length) {
+        log.innerHTML = "<div style=\"font-size:12px;opacity:.75;\">لا توجد رسائل بعد.</div>";
+        return;
+    }
+    log.innerHTML = rows.slice(-20).map(function (m) {
+        const who = m.fromAdmin ? "الدعم" : "أنت";
+        const cls = m.fromAdmin ? "admin" : "user";
+        return "<div class=\"support-msg " + cls + "\"><strong>" + who + ":</strong> " + escapeHtml(m.text || "") + "</div>";
+    }).join("");
+}
+
+function sendSupportWidgetMessage() {
+    const txtEl = document.getElementById("support-chat-text");
+    const msg = document.getElementById("support-chat-msg");
+    if (!supportWidgetVerifiedId) { msg.textContent = "أكد ID أولاً."; return; }
+    const text = (txtEl && txtEl.value ? txtEl.value : "").trim();
+    if (!text) { msg.textContent = "اكتب رسالة أولاً."; return; }
+    const acc = getRegisteredUsers().find(function (u) { return String(u.id || "") === supportWidgetVerifiedId; });
+    if (!acc) { msg.textContent = "الحساب غير موجود."; return; }
+    sendSupportMessage(acc, text);
+    txtEl.value = "";
+    msg.style.color = "var(--accent-color)";
+    msg.textContent = "تم إرسال الرسالة للدعم.";
+    renderSupportWidgetLog();
+}
+
+function showChatCenter() {
+    setSidebarActive("chat");
+    const all = getSupportMessages();
+    if (isAdminSession()) {
+        const groups = {};
+        all.forEach(function (m) {
+            const k = String(m.fromId || "");
+            if (!groups[k]) groups[k] = [];
+            groups[k].push(m);
+        });
+        let html = "<div class=\"animate-view\"><h2>💬 شات الدعم</h2>";
+        const ids = Object.keys(groups);
+        if (!ids.length) html += "<div class=\"form-card\">لا توجد رسائل حالياً.</div>";
+        ids.forEach(function (id) {
+            const msgs = groups[id];
+            const user = (msgs[0] && msgs[0].fromUser) || "—";
+            html += "<div class=\"form-card\" style=\"max-width:760px;margin-bottom:16px;\"><h3 style=\"margin-top:0;\">الحساب: " + escapeHtml(user) + " (#" + escapeHtml(id) + ")</h3>";
+            html += "<div class=\"support-chat-log\" style=\"max-height:230px;\">";
+            html += msgs.map(function (m) {
+                const who = m.fromAdmin ? "الدعم" : "العميل";
+                const cls = m.fromAdmin ? "admin" : "user";
+                return "<div class=\"support-msg " + cls + "\"><strong>" + who + ":</strong> " + escapeHtml(m.text || "") + "</div>";
+            }).join("");
+            html += "</div>";
+            html += "<textarea id=\"admin-reply-" + escapeHtml(id) + "\" placeholder=\"اكتب ردك...\"></textarea>";
+            html += "<button type=\"button\" class=\"save-btn\" style=\"margin-top:8px;\" onclick=\"sendAdminReply(" + JSON.stringify(id) + ")\">إرسال رد</button></div>";
+        });
+        html += "</div>";
+        document.getElementById("content").innerHTML = html;
+        return;
+    }
+    const acc = getCurrentAccount();
+    if (!acc) {
+        document.getElementById("content").innerHTML = "<div class=\"animate-view\"><div class=\"form-card\">هذه الصفحة متاحة للحسابات المسجلة فقط.</div></div>";
+        return;
+    }
+    const my = all.filter(function (m) { return String(m.fromId || "") === String(acc.id); });
+    document.getElementById("content").innerHTML =
+        "<div class=\"animate-view\"><h2>💬 الشات</h2><div class=\"form-card\" style=\"max-width:760px;\">" +
+        "<p style=\"opacity:.8;\">الرسائل بينك وبين الدعم.</p>" +
+        "<div class=\"support-chat-log\" style=\"max-height:250px;\">" +
+        (my.length ? my.map(function (m) {
+            const who = m.fromAdmin ? "الدعم" : "أنت";
+            const cls = m.fromAdmin ? "admin" : "user";
+            return "<div class=\"support-msg " + cls + "\"><strong>" + who + ":</strong> " + escapeHtml(m.text || "") + "</div>";
+        }).join("") : "<div style=\"font-size:13px;opacity:.8;\">لا توجد رسائل بعد.</div>") +
+        "</div><textarea id=\"user-chat-text\" placeholder=\"اكتب رسالتك\"></textarea>" +
+        "<button type=\"button\" class=\"save-btn\" style=\"margin-top:8px;\" onclick=\"sendUserChatFromCenter()\">إرسال</button>" +
+        "</div></div>";
+}
+
+function sendAdminReply(id) {
+    const box = document.getElementById("admin-reply-" + id);
+    if (!box) return;
+    const text = (box.value || "").trim();
+    if (!text) return;
+    const target = getRegisteredUsers().find(function (u) { return String(u.id || "") === String(id); });
+    if (!target) return;
+    const msgs = getSupportMessages();
+    msgs.push({ fromId: String(target.id), fromUser: String(target.username || ""), fromRole: String(target.role || ""), fromGender: String(target.gender || ""), text: text, fromAdmin: true, ts: Date.now() });
+    saveSupportMessages(msgs);
+    showChatCenter();
+}
+
+function sendUserChatFromCenter() {
+    const txt = document.getElementById("user-chat-text");
+    const acc = getCurrentAccount();
+    if (!txt || !acc) return;
+    const text = (txt.value || "").trim();
+    if (!text) return;
+    sendSupportMessage(acc, text);
+    showChatCenter();
+}
+
+function createEmptyBranchAppointments() {
+    const days = {};
+    APPOINTMENT_DAYS.forEach(function (d) {
+        days[d] = Array.from({ length: 8 }, function () { return null; });
+    });
+    return days;
+}
+
+function getAppointmentsData() {
+    const fallback = {
+        slots: ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"],
+        branches: { sidi_beshr: createEmptyBranchAppointments(), smouha: createEmptyBranchAppointments() }
+    };
+    try {
+        const raw = localStorage.getItem(APPOINTMENTS_STORAGE_KEY);
+        if (!raw) return fallback;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return fallback;
+        if (!Array.isArray(parsed.slots) || parsed.slots.length !== 8) parsed.slots = fallback.slots.slice();
+        if (!parsed.branches || typeof parsed.branches !== "object") parsed.branches = {};
+        if (!parsed.branches.sidi_beshr) parsed.branches.sidi_beshr = createEmptyBranchAppointments();
+        if (!parsed.branches.smouha) parsed.branches.smouha = createEmptyBranchAppointments();
+        APPOINTMENT_DAYS.forEach(function (d) {
+            if (!Array.isArray(parsed.branches.sidi_beshr[d]) || parsed.branches.sidi_beshr[d].length !== 8) parsed.branches.sidi_beshr[d] = createEmptyBranchAppointments()[d];
+            if (!Array.isArray(parsed.branches.smouha[d]) || parsed.branches.smouha[d].length !== 8) parsed.branches.smouha[d] = createEmptyBranchAppointments()[d];
+        });
+        return parsed;
+    } catch (e) { return fallback; }
+}
+
+function saveAppointmentsData(data) {
+    localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(data));
+}
+
+function getAppointmentsArchive() {
+    try {
+        const raw = localStorage.getItem(APPOINTMENTS_ARCHIVE_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+}
+
+function saveAppointmentsArchive(arr) {
+    localStorage.setItem(APPOINTMENTS_ARCHIVE_KEY, JSON.stringify(arr || []));
+}
+
+function statusLabelAr(status) {
+    if (status === "present") return "حضر";
+    if (status === "postponed") return "مؤجل";
+    if (status === "absent") return "لم يحضر";
+    return "";
+}
+
+function statusClassName(status) {
+    if (status === "present") return "status-present";
+    if (status === "postponed") return "status-postponed";
+    if (status === "absent") return "status-absent";
+    return "";
+}
+
+function summarizeBranchStatus(branch) {
+    const s = { present: 0, postponed: 0, absent: 0, presentNames: [], postponedNames: [], absentNames: [] };
+    APPOINTMENT_DAYS.forEach(function (d) {
+        for (let i = 0; i < 8; i++) {
+            const item = branch[d][i];
+            if (!item || !item.status) continue;
+            const label = (item.name || "بدون اسم") + " (#" + (item.patientId || "—") + ")";
+            if (item.status === "present") { s.present++; s.presentNames.push(label); }
+            else if (item.status === "postponed") { s.postponed++; s.postponedNames.push(label); }
+            else if (item.status === "absent") { s.absent++; s.absentNames.push(label); }
+        }
+    });
+    return s;
+}
+
+function toggleSummaryList(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+function archiveCurrentBranch(branchKey) {
+    const data = getAppointmentsData();
+    const branchSnapshot = JSON.parse(JSON.stringify(data.branches[branchKey]));
+    const entry = {
+        id: Date.now(),
+        archivedAt: Date.now(),
+        branchKey: branchKey,
+        slots: data.slots.slice(),
+        board: branchSnapshot
+    };
+    const archive = getAppointmentsArchive();
+    archive.unshift(entry);
+    saveAppointmentsArchive(archive);
+    data.branches[branchKey] = createEmptyBranchAppointments();
+    saveAppointmentsData(data);
+}
+
+function setAppointmentStatus(branchKey, day, slot, status) {
+    const data = getAppointmentsData();
+    const item = data.branches[branchKey][day][slot];
+    if (!item) return;
+    item.status = status;
+    saveAppointmentsData(data);
+    showAppointmentsBoard(branchKey);
+}
+
+function showAppointmentStatusMenu(event, branchKey, day, slot) {
+    event.preventDefault();
+    event.stopPropagation();
+    appointmentStatusTarget = { branchKey: branchKey, day: day, slot: slot };
+    const pop = document.getElementById("appointment-status-pop");
+    if (!pop) return;
+    pop.style.left = (event.clientX + 8) + "px";
+    pop.style.top = (event.clientY + 8) + "px";
+    pop.style.display = "block";
+}
+
+function hideAppointmentStatusMenu() {
+    const pop = document.getElementById("appointment-status-pop");
+    if (pop) pop.style.display = "none";
+}
+
+function chooseAppointmentStatus(status) {
+    if (!appointmentStatusTarget) return;
+    setAppointmentStatus(appointmentStatusTarget.branchKey, appointmentStatusTarget.day, appointmentStatusTarget.slot, status);
+    hideAppointmentStatusMenu();
+}
+
+function statusListsToHtml(names) {
+    if (!names || !names.length) return "<div style='opacity:.7;'>لا توجد أسماء.</div>";
+    return names.map(function (n) { return "<div>• " + escapeHtml(n) + "</div>"; }).join("");
+}
+
+function weekStartBaseDate() {
+    return new Date(2026, 3, 1);
+}
+
+function formatDateISO(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+}
+
+function formatDateAR(d) {
+    return d.toLocaleDateString("ar-EG");
+}
+
+function collectHistoryForDay(dateObj) {
+    const start = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 0, 0, 0, 0).getTime();
+    const end = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 23, 59, 59, 999).getTime();
+    const rows = [];
+    getAppointmentsArchive().forEach(function (arch) {
+        if (arch.archivedAt < start || arch.archivedAt > end) return;
+        const board = arch.board || {};
+        APPOINTMENT_DAYS.forEach(function (dayName) {
+            const dayRow = board[dayName] || [];
+            for (let i = 0; i < 8; i++) {
+                const item = dayRow[i];
+                if (!item || !item.name) continue;
+                rows.push({
+                    branch: arch.branchKey === "sidi_beshr" ? "سيدي بشر" : "سموحة",
+                    name: item.name || "",
+                    patientId: item.patientId || "—",
+                    status: statusLabelAr(item.status) || "غير محدد"
+                });
+            }
+        });
+    });
+    return rows;
+}
+
+function getHistoryEntriesForBranch(branchKey) {
+    return getAppointmentsArchive().filter(function (entry) {
+        return entry && entry.branchKey === branchKey;
+    });
+}
+
+function getHistoryEntryByOffset(branchKey, offset) {
+    const entries = getHistoryEntriesForBranch(branchKey);
+    if (offset < 0 || offset >= entries.length) return null;
+    return entries[offset] || null;
+}
+
+function showAppointmentsHistoryBranchChoice() {
+    setSidebarActive("appointments-history");
+    historyBranchKey = "";
+    historyWeekOffset = 0;
+    document.getElementById("content").innerHTML =
+        "<div class=\"animate-view\"><h2>🗂️ المواعيد السابقة</h2>" +
+        "<div class=\"form-card\" style=\"max-width:760px;\">" +
+        "<p style=\"opacity:.85;\">اختر فرع العيادة لعرض المواعيد السابقة.</p>" +
+        "<div class=\"appointments-branch-pick\">" +
+        "<button type=\"button\" class=\"save-btn\" onclick=\"showAppointmentsHistory('sidi_beshr')\">عيادة سيدي بشر</button>" +
+        "<button type=\"button\" class=\"save-btn\" onclick=\"showAppointmentsHistory('smouha')\">عيادة سموحة</button>" +
+        "</div></div></div>";
+}
+
+function showAppointmentsChoice() {
+    setSidebarActive("appointments");
+    document.getElementById("content").innerHTML =
+        "<div class=\"animate-view\"><h2>📅 المواعيد</h2>" +
+        "<div class=\"form-card\" style=\"max-width:760px;\">" +
+        "<p style=\"opacity:.85;\">اختر فرع العيادة لفتح جدول المواعيد.</p>" +
+        "<div class=\"appointments-branch-pick\">" +
+        "<button type=\"button\" class=\"save-btn\" onclick=\"showAppointmentsBoard('sidi_beshr')\">عيادة سيدي بشر</button>" +
+        "<button type=\"button\" class=\"save-btn\" onclick=\"showAppointmentsBoard('smouha')\">عيادة سموحة</button>" +
+        "</div></div></div>";
+}
+
+function buildPatientOptionsHtml() {
+    let opts = "<option value=''>-- اختيار من المرضى المسجلين --</option>";
+    patients.forEach(function (p) {
+        const label = "#" + p.code + " - " + (p.name || "");
+        opts += "<option value=" + JSON.stringify(String(p.code)) + ">" + escapeHtml(label) + "</option>";
+    });
+    return opts;
+}
+
+function showAppointmentsBoard(branchKey) {
+    const isSidi = branchKey === "sidi_beshr";
+    const title = isSidi ? "عيادة سيدي بشر" : "عيادة سموحة";
+    const data = getAppointmentsData();
+    const branch = data.branches[branchKey];
+    const summary = summarizeBranchStatus(branch);
+    let slotsInputs = "";
+    for (let i = 0; i < 8; i++) {
+        slotsInputs += "<input id=\"slot-label-" + i + "\" value=" + JSON.stringify(String(data.slots[i] || "")) + " onchange=\"updateSlotLabel(" + i + ", this.value, " + JSON.stringify(branchKey) + ")\">";
+    }
+    let dayOptions = "";
+    APPOINTMENT_DAYS.forEach(function (d, idx) { dayOptions += "<option value='" + idx + "'>" + d + "</option>"; });
+    let slotOptions = "";
+    for (let i = 0; i < 8; i++) slotOptions += "<option value='" + i + "'>الخانة " + (i + 1) + "</option>";
+
+    let head = "<tr><th class='time-col'>المواعيد</th>";
+    APPOINTMENT_DAYS.forEach(function (d) { head += "<th>" + d + "</th>"; });
+    head += "</tr>";
+    let rows = "";
+    for (let slot = 0; slot < 8; slot++) {
+        rows += "<tr><td class='time-col'>" + escapeHtml(String(data.slots[slot] || "")) + "</td>";
+        APPOINTMENT_DAYS.forEach(function (day) {
+            const item = branch[day][slot];
+            const dropArgs = JSON.stringify(branchKey) + "," + JSON.stringify(day) + "," + slot;
+            let inner = "";
+            if (item && item.name) {
+                const chipText = (item.name || "") + "\nID: " + (item.patientId || "—");
+                const st = statusLabelAr(item.status);
+                const tag = st ? "<span class='status-tag'>" + escapeHtml(st) + "</span>" : "";
+                const cls = statusClassName(item.status);
+                inner = "<div class='appointment-chip " + cls + "' draggable='true' ondragstart='onAppointmentDragStart(event," + dropArgs + ")' ondblclick='showAppointmentStatusMenu(event," + dropArgs + ")'>" + escapeHtml(chipText) + tag + "</div>";
+            }
+            rows += "<td><div class='appointments-cell' ondragover='onAppointmentDragOver(event)' ondragleave='onAppointmentDragLeave(event)' ondrop='onAppointmentDrop(event," + dropArgs + ")'>" + inner + "</div></td>";
+        });
+        rows += "</tr>";
+    }
+    document.getElementById("content").innerHTML =
+        "<div class=\"animate-view\"><h2>📅 جدول " + title + "</h2>" +
+        "<div class=\"form-card\" style=\"max-width:1080px;\">" +
+        "<p style=\"opacity:.85;margin-bottom:8px;\">يمكنك تعديل أوقات المواعيد من الخانات التالية:</p>" +
+        "<div class='appointments-slot-row'>" + slotsInputs + "</div>" +
+        "<div style='display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:12px;'>" +
+        "<div><label>اسم المريض</label><input id='appt-name-input' placeholder='اكتب اسم المريض'></div>" +
+        "<div><label>ID المريض</label><select id='appt-patient-select' onchange='syncAppointmentNameFromPatient()'>" + buildPatientOptionsHtml() + "</select></div>" +
+        "<div><label>اليوم/الخانة</label><div style='display:flex;gap:6px;'><select id='appt-day-select'>" + dayOptions + "</select><select id='appt-slot-select'>" + slotOptions + "</select></div></div>" +
+        "<button type='button' class='save-btn' style='padding:10px 14px;' onclick='addAppointmentToGrid(" + JSON.stringify(branchKey) + ")'>إضافة</button>" +
+        "</div>" +
+        "<div class='appointments-grid-wrap'><table class='appointments-grid'><thead>" + head + "</thead><tbody>" + rows + "</tbody></table></div>" +
+        "<div class='appointments-summary'>" +
+        "<div class='summary-card' style='background:rgba(56,142,60,.12);'>حضر: <strong>" + summary.present + "</strong>" +
+        "<button class='summary-toggle' onclick='toggleSummaryList(\"summary-present\")'>▾ عرض الأسماء</button><div id='summary-present' class='summary-list' style='display:none;'>" + statusListsToHtml(summary.presentNames) + "</div></div>" +
+        "<div class='summary-card' style='background:rgba(255,193,7,.16);'>مؤجل: <strong>" + summary.postponed + "</strong>" +
+        "<button class='summary-toggle' onclick='toggleSummaryList(\"summary-postponed\")'>▾ عرض الأسماء</button><div id='summary-postponed' class='summary-list' style='display:none;'>" + statusListsToHtml(summary.postponedNames) + "</div></div>" +
+        "<div class='summary-card' style='background:rgba(244,67,54,.12);'>لم يحضر: <strong>" + summary.absent + "</strong>" +
+        "<button class='summary-toggle' onclick='toggleSummaryList(\"summary-absent\")'>▾ عرض الأسماء</button><div id='summary-absent' class='summary-list' style='display:none;'>" + statusListsToHtml(summary.absentNames) + "</div></div>" +
+        "</div>" +
+        "<button type='button' class='btn-small' style='margin-top:10px;background:#5d0000;color:#fff;border:none;border-radius:8px;padding:9px 12px;cursor:pointer;' onclick='moveCurrentBoardToHistory(" + JSON.stringify(branchKey) + ")'>ترحيل الجدول الحالي إلى المواعيد السابقة</button>" +
+        "<button type='button' class='link-like-btn' style='margin-top:10px;' onclick='showAppointmentsChoice()'>رجوع لاختيار الفرع</button>" +
+        "<div id='appointment-status-pop' class='appointment-status-pop' onclick='event.stopPropagation()'>" +
+        "<button type='button' onclick='chooseAppointmentStatus(\"present\")'>حضر</button>" +
+        "<button type='button' onclick='chooseAppointmentStatus(\"postponed\")'>مؤجل</button>" +
+        "<button type='button' onclick='chooseAppointmentStatus(\"absent\")'>لم يحضر</button>" +
+        "</div>" +
+        "</div></div>";
+}
+
+function syncAppointmentNameFromPatient() {
+    const sel = document.getElementById("appt-patient-select");
+    const input = document.getElementById("appt-name-input");
+    if (!sel || !input || !sel.value) return;
+    const code = parseInt(sel.value, 10);
+    const p = patients.find(function (x) { return Number(x.code) === Number(code); });
+    if (p && !input.value.trim()) input.value = p.name || "";
+}
+
+function addAppointmentToGrid(branchKey) {
+    const nameEl = document.getElementById("appt-name-input");
+    const patSel = document.getElementById("appt-patient-select");
+    const daySel = document.getElementById("appt-day-select");
+    const slotSel = document.getElementById("appt-slot-select");
+    if (!nameEl || !patSel || !daySel || !slotSel) return;
+    const name = String(nameEl.value || "").trim();
+    const patientId = String(patSel.value || "").trim();
+    const day = APPOINTMENT_DAYS[parseInt(daySel.value, 10)];
+    const slot = parseInt(slotSel.value, 10);
+    if (!name || !day || isNaN(slot)) return;
+    const data = getAppointmentsData();
+    data.branches[branchKey][day][slot] = { name: name, patientId: patientId || "" };
+    saveAppointmentsData(data);
+    showAppointmentsBoard(branchKey);
+}
+
+function updateSlotLabel(index, value, branchKey) {
+    const data = getAppointmentsData();
+    data.slots[index] = String(value || "").trim();
+    saveAppointmentsData(data);
+    showAppointmentsBoard(branchKey);
+}
+
+function onAppointmentDragStart(event, branchKey, day, slot) {
+    dragAppointmentSource = { branchKey: branchKey, day: day, slot: slot };
+    if (event.dataTransfer) event.dataTransfer.setData("text/plain", "appt");
+}
+
+function onAppointmentDragOver(event) {
+    event.preventDefault();
+    const el = event.currentTarget;
+    if (el) el.classList.add("drag-over");
+}
+
+function onAppointmentDragLeave(event) {
+    const el = event.currentTarget;
+    if (el) el.classList.remove("drag-over");
+}
+
+function onAppointmentDrop(event, branchKey, day, slot) {
+    event.preventDefault();
+    const el = event.currentTarget;
+    if (el) el.classList.remove("drag-over");
+    if (!dragAppointmentSource) return;
+    const data = getAppointmentsData();
+    const src = data.branches[dragAppointmentSource.branchKey][dragAppointmentSource.day][dragAppointmentSource.slot];
+    if (!src) return;
+    data.branches[branchKey][day][slot] = src;
+    data.branches[dragAppointmentSource.branchKey][dragAppointmentSource.day][dragAppointmentSource.slot] = null;
+    saveAppointmentsData(data);
+    showAppointmentsBoard(branchKey);
+}
+
+function moveCurrentBoardToHistory(branchKey) {
+    if (!confirm("سيتم ترحيل الجدول الحالي إلى المواعيد السابقة وتنظيف الجدول الحالي. متابعة؟")) return;
+    archiveCurrentBranch(branchKey);
+    showAppointmentsBoard(branchKey);
+}
+
+function showAppointmentsHistory(branchKey) {
+    setSidebarActive("appointments-history");
+    if (typeof branchKey === "undefined") {
+        showAppointmentsHistoryBranchChoice();
+        return;
+    }
+    if (branchKey && branchKey !== historyBranchKey) {
+        historyBranchKey = branchKey;
+        historyWeekOffset = 0;
+    }
+    if (!historyBranchKey) {
+        showAppointmentsHistoryBranchChoice();
+        return;
+    }
+    const isSidi = historyBranchKey === "sidi_beshr";
+    const branchTitle = isSidi ? "عيادة سيدي بشر" : "عيادة سموحة";
+    const entry = getHistoryEntryByOffset(historyBranchKey, historyWeekOffset);
+    const fallbackSlots = getAppointmentsData().slots || [];
+    const slots = entry && Array.isArray(entry.slots) && entry.slots.length === 8 ? entry.slots : fallbackSlots;
+    const canGoOlder = getHistoryEntryByOffset(historyBranchKey, historyWeekOffset + 1) != null;
+    const archivedAtText = entry ? formatDateAR(new Date(entry.archivedAt)) : "لا يوجد";
+    let head = "<tr><th class='time-col'>المواعيد</th>";
+    APPOINTMENT_DAYS.forEach(function (d) {
+        head += "<th>" + d + "</th>";
+    });
+    head += "</tr>";
+    let rows = "";
+    for (let slot = 0; slot < 8; slot++) {
+        rows += "<tr><td class='time-col'>" + escapeHtml(String(slots[slot] || "")) + "</td>";
+        APPOINTMENT_DAYS.forEach(function (day) {
+            const item = entry && entry.board && entry.board[day] ? entry.board[day][slot] : null;
+            let inner = "";
+            if (item && item.name) {
+                const chipText = (item.name || "") + "\nID: " + (item.patientId || "—");
+                const st = statusLabelAr(item.status);
+                const tag = st ? "<span class='status-tag'>" + escapeHtml(st) + "</span>" : "";
+                const cls = statusClassName(item.status);
+                inner = "<div class='appointment-chip " + cls + "'>" + escapeHtml(chipText) + tag + "</div>";
+            }
+            rows += "<td><div class='appointments-cell'>" + inner + "</div></td>";
+        });
+        rows += "</tr>";
+    }
+    document.getElementById("content").innerHTML =
+        "<div class='animate-view'><h2>🗂️ المواعيد السابقة</h2>" +
+        "<div class='form-card' style='max-width:1080px;'>" +
+        "<div class='history-week-topbar'>" +
+        "<button type='button' class='history-arrow-btn' onclick='shiftHistoryWeek(-1)' title='تقليل 7 أيام' " + (historyWeekOffset <= 0 ? "disabled style=\"opacity:.45;cursor:not-allowed;\"" : "") + ">◀</button>" +
+        "<div class='history-week-title'>" + escapeHtml(branchTitle) + " | الأسبوع #" + (historyWeekOffset + 1) + " | تاريخ الحفظ: " + escapeHtml(archivedAtText) + "</div>" +
+        "<button type='button' class='history-arrow-btn' onclick='shiftHistoryWeek(1)' title='زيادة 7 أيام' " + (!canGoOlder ? "disabled style=\"opacity:.45;cursor:not-allowed;\"" : "") + ">▶</button>" +
+        "</div>" +
+        "<div class='appointments-grid-wrap'><table class='appointments-grid'><thead>" + head + "</thead><tbody>" + rows + "</tbody></table></div>" +
+        (!entry ? "<div style='margin-top:10px;opacity:.75;'>لا توجد مواعيد سابقة محفوظة لهذا الفرع في هذا الأسبوع.</div>" : "") +
+        "<button type='button' class='link-like-btn' style='margin-top:10px;' onclick='showAppointmentsHistoryBranchChoice()'>رجوع لاختيار العيادة</button>" +
+        "</div></div>";
+}
+
+function shiftHistoryWeek(delta) {
+    historyWeekOffset += delta;
+    if (historyWeekOffset < 0) historyWeekOffset = 0;
+    showAppointmentsHistory(historyBranchKey);
+}
+
+function getPatientVisitsCount(patientCode) {
+    const pid = String(patientCode || "").trim();
+    if (!pid) return 0;
+    let count = 0;
+    const data = getAppointmentsData();
+    ["sidi_beshr", "smouha"].forEach(function (b) {
+        const board = data.branches[b];
+        APPOINTMENT_DAYS.forEach(function (d) {
+            for (let i = 0; i < 8; i++) {
+                const item = board[d][i];
+                if (item && String(item.patientId || "") === pid) count++;
+            }
+        });
+    });
+    getAppointmentsArchive().forEach(function (arch) {
+        const board = arch.board || {};
+        APPOINTMENT_DAYS.forEach(function (d) {
+            const row = board[d] || [];
+            for (let i = 0; i < 8; i++) {
+                const item = row[i];
+                if (item && String(item.patientId || "") === pid) count++;
+            }
+        });
+    });
+    return count;
+}
+
+function showAccountSettings() {
+    setSidebarActive("profile");
+    const acc = getCurrentAccount();
+    if (!acc) {
+        document.getElementById("content").innerHTML = "<div class=\"animate-view\"><div class=\"form-card\">إعدادات الحساب متاحة للحسابات المسجلة فقط.</div></div>";
+        return;
+    }
+    const phone = normalizePhoneDigits(acc.phone || "") || "—";
+    document.getElementById("content").innerHTML =
+        "<div class=\"animate-view\"><h2>👤 إعدادات الحساب</h2><div class=\"form-card\" style=\"max-width:640px;\">" +
+        "<div class=\"view-row\"><strong>الاسم:</strong> " + escapeHtml(acc.username || "") + "</div>" +
+        "<div class=\"view-row\"><strong>رقم التسجيل:</strong> " + escapeHtml(phone) + "</div>" +
+        "<div class=\"view-row\"><strong>ID:</strong> #" + escapeHtml(acc.id || "") + "</div>" +
+        "<div class=\"view-row\"><strong>النوع:</strong> " + escapeHtml(acc.gender || "—") + "</div>" +
+        "<div class=\"view-row\"><strong>الحالة:</strong> " + escapeHtml(acc.role || "—") + "</div>" +
+        "<hr style=\"border:0;border-top:1px solid var(--border-color);margin:12px 0;\">" +
+        "<label>إظهار كلمة المرور (اكتب ID الخاص بك)</label><input id=\"reveal-pass-id\" type=\"text\" placeholder=\"ID\">" +
+        "<button type=\"button\" class=\"btn-small\" style=\"margin-top:8px;background:var(--accent-color);color:#fff;border:none;padding:8px 12px;border-radius:8px;\" onclick=\"revealMyPassword()\">إظهار</button>" +
+        "<p id=\"revealed-pass\" style=\"font-weight:700;margin-top:8px;\">******</p>" +
+        "<hr style=\"border:0;border-top:1px solid var(--border-color);margin:12px 0;\">" +
+        "<label>تعديل الاسم</label><input id=\"edit-acc-name\" type=\"text\" value=" + JSON.stringify(acc.username || "") + ">" +
+        "<label style=\"margin-top:8px;display:block;\">تعديل كلمة المرور</label><input id=\"edit-acc-pass\" type=\"password\" value=" + JSON.stringify(acc.password || "") + ">" +
+        "<button type=\"button\" class=\"save-btn\" style=\"margin-top:10px;\" onclick=\"saveMyAccountSettings()\">حفظ التعديلات</button>" +
+        "<p id=\"account-settings-msg\" style=\"min-height:18px;margin-top:8px;color:var(--danger-color);\"></p>" +
+        "</div></div>";
+}
+
+function revealMyPassword() {
+    const acc = getCurrentAccount();
+    if (!acc) return;
+    const input = document.getElementById("reveal-pass-id");
+    const out = document.getElementById("revealed-pass");
+    if (!input || !out) return;
+    if (String(input.value || "").trim() !== String(acc.id || "")) {
+        out.textContent = "ID غير صحيح";
+        return;
+    }
+    out.textContent = acc.password || "";
+}
+
+function saveMyAccountSettings() {
+    const acc = getCurrentAccount();
+    if (!acc) return;
+    const nameEl = document.getElementById("edit-acc-name");
+    const passEl = document.getElementById("edit-acc-pass");
+    const msg = document.getElementById("account-settings-msg");
+    const newName = (nameEl && nameEl.value ? nameEl.value : "").trim();
+    const newPass = passEl && passEl.value ? passEl.value : "";
+    if (!newName || !newPass) { if (msg) msg.textContent = "الاسم وكلمة المرور مطلوبان."; return; }
+    const list = getRegisteredUsers();
+    const idx = list.findIndex(function (u) { return String(u.id || "") === String(acc.id || ""); });
+    if (idx < 0) return;
+    if (newName.toLowerCase() !== String(acc.username || "").toLowerCase() && isUsernameTaken(newName)) {
+        if (msg) msg.textContent = "اسم المستخدم مستخدم بالفعل.";
+        return;
+    }
+    list[idx].username = newName;
+    list[idx].password = newPass;
+    saveRegisteredUsers(list);
+    currentSessionUser = newName;
+    if (msg) { msg.style.color = "var(--accent-color)"; msg.textContent = "تم الحفظ بنجاح."; }
+}
+
+function submitNewAccount() {
+    const u = document.getElementById("reg-username").value.trim();
+    const phoneRaw = document.getElementById("reg-phone").value;
+    const phone = normalizePhoneDigits(phoneRaw);
+    const gender = document.getElementById("reg-gender").value;
+    const role = document.getElementById("reg-role").value;
+    const p1 = document.getElementById("reg-password").value;
+    const p2 = document.getElementById("reg-password2").value;
+    const msg = document.getElementById("register-account-msg");
+    msg.style.color = "var(--danger-color)";
+    if (!u) { msg.textContent = t("register_empty_user"); return; }
+    if (!isValidRegPhone11(phoneRaw)) { msg.textContent = t("register_phone_invalid"); return; }
+    if (isPhoneTaken(phone)) { msg.textContent = t("register_phone_taken"); return; }
+    if (!gender) { msg.textContent = "اختر النوع."; return; }
+    if (!role) { msg.textContent = "اختر نوع الحساب (دكتور/مريض)."; return; }
+    if (!p1) { msg.textContent = t("register_empty_pass"); return; }
+    if (p1 !== p2) { msg.textContent = t("register_pass_mismatch"); return; }
+    if (isUsernameTaken(u)) { msg.textContent = t("register_user_taken"); return; }
+    const list = getRegisteredUsers();
+    const generatedId = generateAccountId();
+    list.push({ id: generatedId, username: u, password: p1, phone: phone, gender: gender, role: role });
+    saveRegisteredUsers(list);
+    msg.textContent = "";
+    showAuthToast(t("register_success_toast") + " | ID: #" + generatedId, true);
+    document.getElementById("reg-username").value = "";
+    document.getElementById("reg-phone").value = "";
+    document.getElementById("reg-gender").value = "";
+    document.getElementById("reg-role").value = "";
+    document.getElementById("reg-password").value = "";
+    document.getElementById("reg-password2").value = "";
+    setTimeout(function () { backToLoginFromRegister(); }, 1400);
+}
+
+function validateCredentials(user, pass) {
+    const u = (user || "").trim();
+    const p = pass || "";
+    if (u.toLowerCase() === ADMIN_USER.toLowerCase() && p === ADMIN_PASS) return true;
+    return getRegisteredUsers().some(function (x) {
+        return (x.username || "").trim().toLowerCase() === u.toLowerCase() && x.password === p;
+    });
+}
+
+function showAuthToast(message, ok) {
+    const el = document.getElementById("auth-toast");
+    el.textContent = message;
+    el.className = "auth-toast auth-toast--show " + (ok ? "auth-toast--ok" : "auth-toast--err");
+    clearTimeout(window.__authToastT);
+    window.__authToastT = setTimeout(function () {
+        el.classList.add("auth-toast--hide");
+        setTimeout(function () {
+            el.className = "auth-toast";
+            el.textContent = "";
+        }, 450);
+    }, 2600);
+}
+
+function enterApp() {
+    document.getElementById("login-screen").style.display = "none";
+    const fab = document.getElementById("support-chat-fab");
+    const box = document.getElementById("support-chat-box");
+    if (fab) fab.style.display = "none";
+    if (box) box.style.display = "none";
+    document.getElementById("main-nav").style.display = "flex";
+    document.getElementById("main-header").style.display = "block";
+    document.getElementById("main-container").style.display = "flex";
+    loginAttempts = 0;
+    applySidebarForRole();
+    showWelcome();
+}
+
+const i18n = {
+    ar: {
+        login_msg: "يرجى تسجيل الدخول للمتابعة", login_btn: "دخول", login_err: "اسم المستخدم أو كلمة المرور غير صحيحة", login_locked: "تم قفل الدخول مؤقتاً. انتظر ", seconds: " ثانية", forgot_pass: "نسيت كلمة المرور؟", login_success: "تم تسجيل الدخول بنجاح", register_link: "إنشاء حساب جديد", register_code_prompt: "أدخل كود الأمان لإنشاء حساب (غير متاح للجميع)", register_code_ph: "كود الأمان", register_verify_btn: "تأكيد الكود", register_back_login: "العودة لتسجيل الدخول", register_form_title: "أكمل بيانات الحساب الجديد", register_label_user: "اسم المستخدم", register_label_pass: "كلمة المرور", register_label_pass2: "تأكيد كلمة المرور", register_submit_btn: "إنشاء الحساب", register_back_code: "رجوع لكود الأمان", register_wrong: "كود الأمان غير صحيح.", register_locked: "تم قفل إنشاء الحساب مؤقتاً. المتبقي: ", register_pass_mismatch: "كلمة المرور وتأكيدها غير متطابقتين.", register_user_taken: "هذا الاسم مستخدم من قبل. اختر اسماً آخر.", register_success_toast: "تم إنشاء الحساب بنجاح", register_empty_user: "أدخل اسم المستخدم", register_empty_pass: "أدخل كلمة المرور", pw_toggle_aria: "عرض ما يُكتب (كلمة المرور أو الكود)", prompt_dr_name: "ما هو اسم الدكتور؟", pass_hint: "كلمة المرور هي: 1234", side_logout: "🚪 تسجيل الخروج", nav_home: "الرئيسية", nav_manage: "إدارة المرضى", dr_name: "دكتور أحمد وجيه", header_title: "عيادة دكتور أحمد وجيه", side_home: "🏠 الرئيسية", side_list: "👥 قائمة المرضى", side_add: "➕ إضافة مريض جديد", side_settings: "⚙️ الإعدادات", side_accounts: "👤 إدارة الحسابات", accounts_title: "إدارة الحسابات", accounts_hint: "الحسابات المسجّلة التي يمكنها تسجيل الدخول للموقع. يمكنك مراجعتها أو حذف أي حساب لمنع دخوله.", accounts_col_user: "اسم المستخدم", accounts_delete: "حذف الحساب", accounts_empty: "لا توجد حسابات مسجّلة بعد.", accounts_confirm_delete: "حذف هذا الحساب نهائياً؟ لا يمكن التراجع.", register_label_phone: "رقم التسجيل (11 رقماً)", register_phone_ph: "أدخل 11 رقماً", register_phone_invalid: "رقم التسجيل يجب أن يكون 11 رقماً بالضبط (أرقام فقط).", register_phone_taken: "رقم التسجيل مستخدم من قبل.", forgot_prompt: "أدخل اسم الحساب أو رقم التسجيل (11 رقماً):", forgot_not_found: "لا يوجد حساب مطابق لهذا الاسم أو الرقم.", forgot_found_title: "بيانات الحساب:", forgot_admin_reply: "حساب المدير الافتراضي:\nالمستخدم: admin\nكلمة المرور: 1234", patient_portal_link: "مريض؟ تابع حالتك", patient_portal_title: "متابعة الحالة (للمريض)", patient_portal_prompt: "أدخل المعرّف (ID) الظاهر في قائمة المرضى لدى العيادة بجانب اسمك.", patient_portal_btn: "عرض حالتي", patient_portal_back: "رجوع", patient_portal_not_found: "لم يُعثر على مريض بهذا المعرّف.", patient_readonly_note: "عرض فقط — لا يمكن التعديل من هنا.", patient_portal_id_ph: "مثال: 3 أو #3", accounts_col_phone: "رقم التسجيل", accounts_view: "عرض البيانات", accounts_modal_title: "بيانات الحساب", accounts_modal_close: "إغلاق", accounts_field_user: "اسم المستخدم", accounts_field_phone: "رقم التسجيل", accounts_field_pass: "كلمة المرور", accounts_assign_title: "تعيين كأدمن", accounts_assign_hint: "يمنح المستخدم المختار نفس صلاحيات المدير: إدارة الحسابات وتعيين أدمن آخر.", accounts_assign_btn: "تعيين", accounts_assign_placeholder: "— اختر مستخدماً —", accounts_assign_need_select: "اختر مستخدماً من القائمة أولاً.", accounts_assign_fail: "تعذر التعيين: المستخدم غير موجود، أو مُعيّن مسبقاً، أو حساب المدير الرئيسي.", accounts_assigned: "تم التعيين كأدمن بنجاح", accounts_extra_title: "مدراء إضافيون", accounts_remove_admin_btn: "إلغاء صلاحية الأدمن", accounts_extra_empty: "لا يوجد مدراء إضافيون.", accounts_revoke_confirm: "إلغاء صلاحية الأدمن عن هذا المستخدم؟",
+        hero_h1: "رسالة الطبيب السامية", hero_p: '"الطب هو المزيج الأسمى بين العقل والقلب، حيث يلتقي العلم بالرحمة ليصنعا المعجزات بإذن الله."',
+        card1_h: "💎 قيمة الحياة البشرية", card1_p: "الحفاظ على حياة فرد واحد هو إحياء لأمة كاملة.",
+        card2_h: "🌍 حجر الزاوية للمجتمعات", card2_p: "الطبيب هو الحارس اليقظ الذي يحمي طاقة المجتمع وازدهاره.",
+        card3_h: "🛡️ الوقاية خير من العلاج", card3_p: "أهمية الطب تكمن في نشر الوعي ومنع حدوث الأوبئة.",
+        card4_h: "🤝 الترابط الإنساني", card4_p: "الطب لغة عالمية تربط الطبيب بمريضه برباط من الثقة والامتنان.",
+        card5_h: "💡 نهضة العقل والعلم", card5_p: "كل اكتشاف طبي جديد يفتح آفاقاً للبشرية لجودة حياة أفضل.",
+        card6_h: "⚖️ أمانة الكلمة والتشخيص", card6_p: "دقة التشخيص ليست مجرد مهارة، بل هي أمانة يُسأل عنها أمام الله.",
+        card7_h: "❤️ جبر الخواطر بالرحمة", card7_p: "الابتسامة في وجه المريض نصف العلاج. الطبيب يداوي الروح قبل الجسد.",
+        card8_h: "⏳ احترام وقت المريض", card8_p: "تنظيم البيانات رقمياً هو أعلى درجات الاحترام لوقته ومعاناته.",
+        card9_h: "🌟 الصبر والاحتساب", card9_p: "كل تعب في سبيل راحة مريض هو رفعة لدرجاتك في الدنيا والآخرة.",
+        search_placeholder: "بحث سريع بالاسم أو الكود...", table_id: "ID", table_name: "الاسم", table_phone: "الهاتف", table_actions: "الإجراءات", btn_view: "📂 عرض", btn_edit: "✏️ تعديل", btn_delete: "🗑️ حذف", btn_back: "رجوع للقائمة", menu_aria: "قائمة الإجراءات", form_add: "➕ إضافة مريض جديد", form_edit: "📝 تعديل بيانات المريض", label_name: "الاسم بالكامل *", label_gender: "النوع", label_phone: "رقم الهاتف", label_age: "Age (السن)", label_regdate: "تاريخ التسجيل", label_required: "📝 المطلوب (Request)", label_upload: "🖼️ إرفاق صورة تحاليل / أشعة / صورة المريض", save_btn_new: "✅ حفظ بيانات المريض", save_btn_edit: "💾 حفظ التعديلات", gender_m: "ذكر", gender_f: "أنثى", gender_u: "غير محدد", settings_title: "⚙️ الإعدادات", settings_dark: "الوضع الليلي", settings_lang: "لغة الواجهة (English)", settings_credits: "تم إنشاء هذا الموقع عن طريق شركة FTK.\nالقائم على هذا الموقع: المهندس محمد خالد.\nللدعم تواصل معنا عبر واتساب على الرقم: 01282253024", settings_reorder_ids: "إعادة ترقيم معرّفات المرضى (ID)", settings_reorder_hint: "يعيد ترقيم كل المرضى من 1 بالترتيب الحالي للأرقام، إذا حصل لبس أو فجوات بعد الحذف.", settings_reorder_btn: "تنفيذ إعادة الترقيم", confirm_reorder_ids: "سيتم تغيير رقم كل مريض بالترتيب من 1. هل تتابع؟", settings_reorder_done: "تم إعادة ترقيم المعرّفات بنجاح", settings_reorder_empty: "لا يوجد مرضى في القائمة.", confirm_delete: "هل تريد الحذف؟", alert_name: "يرجى إدخال اسم المريض", upload_success: "✅ تم تحميل الملف بنجاح", upload_exists: "✅ يوجد ملف مرفق مسبقاً", ftk_nav: "تم إنشاءه بواسطة شركة FTK", ftk_full: "تم إنشاء هذا الموقع عن طريق شركة FTK والقائم على هذا المشروع مهندس محمد خالد وللدعم كلم الهاتف 01282253024",
+        inj_mark: "💉 Injection", none_mark: "⚪ None (إلغاء)", label_class: "التصنيف", class_all: "الكل (All)", class_inj: "Injection فقط"
+    },
+    en: {
+        login_msg: "Please login to continue", login_btn: "Login", login_err: "Invalid username or password", login_locked: "Locked. Wait ", seconds: "s", forgot_pass: "Forgot Password?", login_success: "Signed in successfully", register_link: "Create account", register_code_prompt: "Enter the security code to register", register_code_ph: "Security code", register_verify_btn: "Verify code", register_back_login: "Back to login", register_form_title: "New account details", register_label_user: "Username", register_label_pass: "Password", register_label_pass2: "Confirm password", register_submit_btn: "Create account", register_back_code: "Back to security code", register_wrong: "Invalid security code.", register_locked: "Registration locked. Remaining: ", register_pass_mismatch: "Password and confirmation do not match.", register_user_taken: "This username is already taken.", register_success_toast: "Account created successfully", register_empty_user: "Enter a username", register_empty_pass: "Enter a password", pw_toggle_aria: "Show typed password or code", prompt_dr_name: "What is the Doctor's name?", pass_hint: "Password is: 1234", side_logout: "🚪 Logout", nav_home: "Home", nav_manage: "Patients Management", dr_name: "Dr. Ahmed Wagih", header_title: "Dr. Ahmed Wagih Clinic", side_home: "🏠 Home", side_list: "👥 Patients List", side_add: "➕ Add New Patient", side_settings: "⚙️ Settings", side_accounts: "👤 Manage accounts", accounts_title: "Account management", accounts_hint: "Registered accounts that can sign in. Review them or delete an account to revoke access.", accounts_col_user: "Username", accounts_delete: "Delete account", accounts_empty: "No registered accounts yet.", accounts_confirm_delete: "Permanently delete this account? This cannot be undone.", register_label_phone: "Registration phone (11 digits)", register_phone_ph: "Enter 11 digits", register_phone_invalid: "Phone must be exactly 11 digits.", register_phone_taken: "This phone number is already registered.", forgot_prompt: "Enter account username OR 11-digit registration phone:", forgot_not_found: "No account matches that username or phone.", forgot_found_title: "Account details:", forgot_admin_reply: "Default admin account:\nUsername: admin\nPassword: 1234", patient_portal_link: "Patient? View your record", patient_portal_title: "Patient follow-up", patient_portal_prompt: "Enter your patient ID shown in the clinic patient list.", patient_portal_btn: "View my record", patient_portal_back: "Back", patient_portal_not_found: "No patient found with this ID.", patient_readonly_note: "Read-only — you cannot edit from here.", patient_portal_id_ph: "e.g. 5 or #5", accounts_col_phone: "Reg. phone", accounts_view: "View details", accounts_modal_title: "Account details", accounts_modal_close: "Close", accounts_field_user: "Username", accounts_field_phone: "Registration phone", accounts_field_pass: "Password", accounts_assign_title: "Assign as admin", accounts_assign_hint: "Selected user gets full admin access (manage accounts, assign admins).", accounts_assign_btn: "Assign", accounts_assign_placeholder: "— Pick a user —", accounts_assign_need_select: "Please pick a user from the list first.", accounts_assign_fail: "Cannot assign: user missing, already admin, or is the main admin account.", accounts_assigned: "User promoted to admin", accounts_extra_title: "Additional admins", accounts_remove_admin_btn: "Remove admin role", accounts_extra_empty: "No additional admins.", accounts_revoke_confirm: "Remove admin role from this user?",
+        hero_h1: "The Physician's Noble Mission", hero_p: '"Medicine is the ultimate blend of mind and heart, where science meets compassion to create miracles."',
+        card1_h: "💎 Value of Human Life", card1_p: "Preserving one life is like saving all of humanity.",
+        card2_h: "🌍 Cornerstone of Society", card2_p: "The doctor is the guardian of society's energy.",
+        card3_h: "🛡️ Prevention over Cure", card3_p: "Medicine's importance lies in spreading awareness.",
+        card4_h: "🤝 Human Connection", card4_p: "Medicine is a universal language linking doctor and patient.",
+        card5_h: "💡 Renaissance of Science", card5_p: "Every new discovery opens horizons for a better life.",
+        card6_h: "⚖️ Honesty in Diagnosis", card6_p: "Accuracy is a trust we are accountable for.",
+        card7_h: "❤️ Compassion", card7_p: "A smile is half the cure. A doctor heals the soul first.",
+        card8_h: "⏳ Respect for Time", card8_p: "Digital data organization is respect for patient suffering.",
+        card9_h: "🌟 Patience & Reward", card9_p: "Every effort for a patient's comfort is a step up in reward.",
+        search_placeholder: "Search by name...", table_id: "ID", table_name: "Name", table_phone: "Phone", table_actions: "Actions", btn_view: "📂 View", btn_edit: "✏️ Edit", btn_delete: "🗑️ Delete", btn_back: "Back", menu_aria: "Actions menu", form_add: "➕ Add New Patient", form_edit: "📝 Edit Patient", label_name: "Full Name *", label_gender: "Gender", label_phone: "Phone", label_age: "Age", label_regdate: "Reg. Date", label_required: "📝 Request", label_upload: "🖼️ Attach Files", save_btn_new: "✅ Save Data", save_btn_edit: "💾 Save Changes", gender_m: "Male", gender_f: "Female", gender_u: "Not Specified", settings_title: "⚙️ Settings", settings_dark: "Dark Mode", settings_lang: "Language (العربية)", settings_credits: "This website was created by FTK.\nProject lead: Eng. Mohamed Khaled.\nFor support, contact us on WhatsApp: 01282253024", settings_reorder_ids: "Renumber patient IDs", settings_reorder_hint: "Renumbers all patients from 1 in current ID order if numbers got messy or had gaps after deletes.", settings_reorder_btn: "Renumber now", confirm_reorder_ids: "Every patient will get a new sequential ID from 1. Continue?", settings_reorder_done: "IDs renumbered successfully", settings_reorder_empty: "No patients to renumber.", confirm_delete: "Are you sure?", alert_name: "Enter patient name", upload_success: "✅ Success", upload_exists: "✅ Exists", ftk_nav: "Created by FTK Company", ftk_full: "Created by FTK Company, Project lead: Eng. Mohamed Khaled. For support: 01282253024",
+        inj_mark: "💉 Injection", none_mark: "⚪ None", label_class: "Classification", class_all: "All Patients", class_inj: "Injection Only"
+    }
+};
+
+let currentLang = 'ar';
+let patients = [];
+let currentFileBase64 = "";
+
+function loadPatientsFromStorage() {
+    try {
+        const raw = localStorage.getItem(PATIENTS_STORAGE_KEY);
+        if (!raw) return;
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) return;
+        patients = arr.map(function (p) {
+            const x = Object.assign({}, p);
+            if (x.code != null) x.code = parseInt(x.code, 10) || 0;
+            return x;
+        });
+    } catch (e) {
+        patients = [];
+    }
+}
+
+function persistPatients() {
+    try {
+        localStorage.setItem(PATIENTS_STORAGE_KEY, JSON.stringify(patients));
+    } catch (e) {
+        alert(currentLang === "ar" ? "تعذر حفظ بيانات المرضى (التخزين ممتلئ أو كبير جداً)." : "Could not save patients (storage full or data too large).");
+    }
+}
+
+function nextPatientCode() {
+    if (!patients.length) return 1;
+    return patients.reduce(function (m, p) {
+        const c = parseInt(p.code, 10);
+        return Math.max(m, isNaN(c) ? 0 : c);
+    }, 0) + 1;
+}
+
+function reorderPatientIds() {
+    patients.sort(function (a, b) {
+        return (parseInt(a.code, 10) || 0) - (parseInt(b.code, 10) || 0);
+    });
+    patients.forEach(function (p, i) { p.code = i + 1; });
+    persistPatients();
+}
+
+function confirmReorderPatientIds() {
+    if (!patients.length) {
+        alert(t("settings_reorder_empty"));
+        return;
+    }
+    if (!confirm(t("confirm_reorder_ids"))) return;
+    reorderPatientIds();
+    showAuthToast(t("settings_reorder_done"), true);
+    showSettings();
+}
+
+function t(key) { return i18n[currentLang][key] || key; }
+
+function setSidebarActive(section) {
+    document.querySelectorAll('.sidebar button[data-nav]').forEach(function(btn) {
+        btn.classList.toggle('sidebar-active', btn.getAttribute('data-nav') === section);
+    });
+}
+
+function handleLogin() {
+    if (isLocked) return;
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    if (validateCredentials(user, pass)) {
+        currentSessionUser = (user || "").trim();
+        document.getElementById("login-error").textContent = "";
+        showAuthToast(t("login_success"), true);
+        const btn = document.getElementById("login-submit-btn");
+        btn.disabled = true;
+        btn.style.opacity = "0.65";
+        setTimeout(function () {
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            enterApp();
+        }, 1200);
+    } else {
+        loginAttempts++;
+        if (loginAttempts >= 3) startLockTimer();
+        else {
+            const errorEl = document.getElementById("login-error");
+            errorEl.innerText = t("login_err") + " (" + loginAttempts + "/3)";
+            errorEl.style.display = "block";
+        }
+    }
+}
+
+function startLockTimer() {
+    isLocked = true; let timeLeft = 30;
+    const errorEl = document.getElementById("login-error");
+    const btn = document.getElementById("login-submit-btn");
+    btn.style.opacity = "0.5"; btn.style.cursor = "not-allowed";
+    const timer = setInterval(() => {
+        errorEl.innerText = t('login_locked') + timeLeft + t('seconds');
+        timeLeft--;
+        if (timeLeft < 0) { clearInterval(timer); isLocked = false; loginAttempts = 0; errorEl.innerText = ""; btn.style.opacity = "1"; btn.style.cursor = "pointer"; }
+    }, 1000);
+}
+
+function forgotPassword() {
+    const raw = prompt(t("forgot_prompt"));
+    if (!raw || !String(raw).trim()) return;
+    const q = String(raw).trim();
+    if (q.toLowerCase() === ADMIN_USER.toLowerCase()) {
+        alert(t("forgot_admin_reply"));
+        return;
+    }
+    const phoneNorm = normalizePhoneDigits(q);
+    const list = getRegisteredUsers();
+    let found = null;
+    for (let i = 0; i < list.length; i++) {
+        const u = list[i];
+        if ((u.username || "").trim().toLowerCase() === q.toLowerCase()) { found = u; break; }
+        if (phoneNorm.length === 11 && normalizePhoneDigits(u.phone || "") === phoneNorm) { found = u; break; }
+    }
+    if (found) {
+        const ph = normalizePhoneDigits(found.phone || "") || "—";
+        alert(
+            t("forgot_found_title") + "\n\n" +
+            t("accounts_field_user") + ": " + found.username + "\n" +
+            "ID: #" + (found.id || "—") + "\n" +
+            t("accounts_field_phone") + ": " + ph + "\n" +
+            t("accounts_field_pass") + ": " + (found.password || "")
+        );
+    } else {
+        alert(t("forgot_not_found"));
+    }
+}
+
+function logout() { location.reload(); }
+
+function updateStaticTexts() {
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.innerText = t(el.getAttribute('data-i18n')); });
+    if (document.getElementById("username")) document.getElementById("username").placeholder = currentLang === 'ar' ? 'اسم المستخدم' : 'Username';
+    if (document.getElementById("password")) document.getElementById("password").placeholder = currentLang === 'ar' ? 'كلمة المرور' : 'Password';
+    const rsi = document.getElementById("register-secret-input");
+    if (rsi) rsi.placeholder = t("register_code_ph");
+    const regph = document.getElementById("reg-phone");
+    if (regph) regph.placeholder = t("register_phone_ph");
+    const rg = document.getElementById("reg-gender");
+    const rr = document.getElementById("reg-role");
+    if (rg && rg.options.length >= 3) {
+        rg.options[0].text = currentLang === "ar" ? "-- اختر --" : "-- Select --";
+        rg.options[1].text = currentLang === "ar" ? "ذكر" : "Male";
+        rg.options[2].text = currentLang === "ar" ? "أنثى" : "Female";
+    }
+    if (rr && rr.options.length >= 3) {
+        rr.options[0].text = currentLang === "ar" ? "-- اختر --" : "-- Select --";
+        rr.options[1].text = currentLang === "ar" ? "دكتور" : "Doctor";
+        rr.options[2].text = currentLang === "ar" ? "مريض" : "Patient";
+    }
+    const ppi = document.getElementById("patient-portal-id");
+    if (ppi) ppi.placeholder = t("patient_portal_id_ph");
+    const pwAria = t("pw_toggle_aria");
+    document.querySelectorAll("#login-screen .pw-reveal-cb").forEach(function (cb) {
+        cb.setAttribute("aria-label", pwAria);
+    });
+    document.querySelectorAll("#login-screen .pw-reveal-toggle").forEach(function (lbl) {
+        lbl.setAttribute("title", pwAria);
+    });
+}
+
+function toggleLanguage() {
+    currentLang = currentLang === 'ar' ? 'en' : 'ar';
+    document.body.classList.toggle('en-mode', currentLang === 'en');
+    document.getElementById('html-tag').setAttribute('lang', currentLang);
+    updateStaticTexts();
+    if(document.getElementById("login-screen").style.display === "none") showPatients();
+}
+
+function showWelcome() {
+    setSidebarActive('home');
+    document.getElementById("content").innerHTML = `
+        <div class="welcome-section animate-view">
+            <div class="hero-box hero-animated"><h1>${t('hero_h1')}</h1><p style="font-size:18px; opacity:0.9; max-width:800px; margin:auto;">${t('hero_p')}</p></div>
+            <div class="info-grid-welcome">
+                <div class="info-card"><h3>${t('card1_h')}</h3><p>${t('card1_p')}</p></div>
+                <div class="info-card"><h3>${t('card2_h')}</h3><p>${t('card2_p')}</p></div>
+                <div class="info-card"><h3>${t('card3_h')}</h3><p>${t('card3_p')}</p></div>
+                <div class="info-card"><h3>${t('card4_h')}</h3><p>${t('card4_p')}</p></div>
+                <div class="info-card"><h3>${t('card5_h')}</h3><p>${t('card5_p')}</p></div>
+                <div class="info-card"><h3>${t('card6_h')}</h3><p>${t('card6_p')}</p></div>
+                <div class="info-card"><h3>${t('card7_h')}</h3><p>${t('card7_p')}</p></div>
+                <div class="info-card"><h3>${t('card8_h')}</h3><p>${t('card8_p')}</p></div>
+                <div class="info-card"><h3>${t('card9_h')}</h3><p>${t('card9_p')}</p></div>
+            </div>
+        </div>`;
+}
+
+window.onclick = function(event) {
+    if (!event.target.closest('.dots-btn')) {
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+        for (var i = 0; i < dropdowns.length; i++) { if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show'); }
+    }
+    if (!event.target.closest('.appointment-status-pop') && !event.target.closest('.appointment-chip')) {
+        hideAppointmentStatusMenu();
+    }
+}
+
+function addPatientPage(editCode = null) {
+    setSidebarActive('add');
+    let p = editCode ? patients.find(x => x.code === editCode) : null;
+    let title = editCode ? t('form_edit') : t('form_add');
+    const formExtraClass = editCode ? "" : " form-card-add-patient";
+    currentFileBase64 = p ? p.attachment : "";
+    document.getElementById("content").innerHTML = `
+    <div class="animate-view"><div class="form-card${formExtraClass}">
+        <h2 style="text-align:center;">${title}</h2>
+        <input type="hidden" id="editCode" value="${editCode || ''}">
+        <div class="form-grid">
+            <div class="form-group"><label>${t('label_name')}</label><input id="name" type="text" value="${p ? p.name : ''}"></div>
+            <div class="form-group"><label>${t('label_gender')}</label><select id="gender"><option value="غير محدد">--</option><option value="ذكر" ${p?.gender=='ذكر'?'selected':''}>${t('gender_m')}</option><option value="أنثى" ${p?.gender=='أنثى'?'selected':''}>${t('gender_f')}</option></select></div>
+            <div class="form-group"><label>${t('label_phone')}</label><input id="phone" type="text" value="${p ? p.phone : ''}"></div>
+            <div class="form-group"><label>${t('label_age')}</label><input id="age" type="number" value="${p ? p.age : ''}"></div>
+            <div class="form-group"><label>${t('label_regdate')}</label><input id="regdate" type="date" value="${p ? p.regdate : ''}"></div>
+            <div class="form-group"><label>PMH</label><textarea id="pmh" rows="2">${p ? p.pmh : ''}</textarea></div>
+            <div class="form-group"><label>PSH</label><textarea id="psh" rows="2">${p ? p.psh : ''}</textarea></div>
+            <div class="form-group"><label>c/o</label><textarea id="co" rows="2">${p ? p.co : ''}</textarea></div>
+            <div class="form-group"><label>FH</label><select id="fh"><option ${p?.fh=='negative'?'selected':''}>negative</option><option ${p?.fh=='positive'?'selected':''}>positive</option></select></div>
+            <div class="form-group"><label>Stress</label><select id="stress"><option ${p?.stress=='negative'?'selected':''}>negative</option><option ${p?.stress=='positive'?'selected':''}>positive</option></select></div>
+            <div class="form-group"><label>Physiotherapy</label><select id="physio"><option ${p?.physio=='negative'?'selected':''}>negative</option><option ${p?.physio=='positive'?'selected':''}>positive</option></select></div>
+            <div class="form-group"><label>Response</label><select id="resp1"><option ${p?.resp1=='good'?'selected':''}>good</option><option ${p?.resp1=='bad'?'selected':''}>bad</option></select></div>
+            <div class="form-group"><label>Number</label><input id="num" type="text" value="${p ? p.num : ''}"></div>
+            <div class="form-group"><label>Injection</label><select id="inj"><option ${p?.inj=='negative'?'selected':''}>negative</option><option ${p?.inj=='positive'?'selected':''}>positive</option></select></div>
+            <div class="form-group"><label>Type</label><input id="type" type="text" value="${p ? p.type : ''}"></div>
+            <div class="form-group"><label>Response (Injection)</label><select id="resp2"><option ${p?.resp2=='good'?'selected':''}>good</option><option ${p?.resp2=='bad'?'selected':''}>bad</option></select></div>
+            <div class="form-group"><label>Stairs</label><input id="stairs" type="text" value="${p ? p.stairs : ''}"></div>
+            <div class="form-group"><label>WT</label><input id="wt" type="text" value="${p ? p.wt : ''}"></div>
+            <div class="form-group"><label>Scans</label><input id="scans" type="text" value="${p ? p.scans : ''}"></div>
+            <div class="form-group"><label>Labs</label><textarea id="labs" rows="2">${p ? p.labs : ''}</textarea></div>
+            <div class="form-group"><label>TSH</label><input id="tsh" type="text" value="${p ? p.tsh : ''}"></div>
+            <div class="form-group"><label>CRP</label><input id="crp" type="text" value="${p ? p.crp : ''}"></div>
+            <div class="form-group"><label>ESR</label><input id="esr" type="text" value="${p ? p.esr : ''}"></div>
+            <div class="form-group"><label>Vit D</label><input id="vitd" type="text" value="${p ? p.vitd : ''}"></div>
+            <div class="form-group"><label>CS</label><input id="cs" type="text" value="${p ? p.cs : ''}"></div>
+            <div class="form-group"><label>Menopause</label><input id="menopause" type="text" value="${p ? p.menopause : ''}"></div>
+            <div class="form-group full-width"><label>${t('label_required')}</label><textarea id="required" rows="4">${p ? p.required : ''}</textarea></div>
+            <div class="form-group full-width" style="border: 2px dashed #ccc; padding: 20px; border-radius: 12px; text-align: center;">
+                <label>${t('label_upload')}</label><input type="file" id="patientFile" accept="image/*" onchange="handleFileSelect(event)" style="border:none;">
+                <p id="file-status">${p?.attachment ? t('upload_exists') : ''}</p>
+            </div>
+        </div>
+        <button class="save-btn" onclick="savePatient()">${editCode ? t('save_btn_edit') : t('save_btn_new')}</button>
+    </div></div>`;
+}
+
+function handleFileSelect(evt) {
+    const file = evt.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) { currentFileBase64 = e.target.result; document.getElementById('file-status').innerHTML = t('upload_success'); };
+        reader.readAsDataURL(file);
+    }
+}
+
+function savePatient() {
+    let name = document.getElementById("name").value; if(!name) { alert(t('alert_name')); return; }
+    let editCode = document.getElementById("editCode").value;
+    let patientData = {
+        name: name, gender: document.getElementById("gender").value, phone: document.getElementById("phone").value, age: document.getElementById("age").value,
+        regdate: document.getElementById("regdate").value, pmh: document.getElementById("pmh").value, psh: document.getElementById("psh").value, co: document.getElementById("co").value,
+        fh: document.getElementById("fh").value, stress: document.getElementById("stress").value, physio: document.getElementById("physio").value, resp1: document.getElementById("resp1").value,
+        num: document.getElementById("num").value, inj: document.getElementById("inj").value, type: document.getElementById("type").value, resp2: document.getElementById("resp2").value,
+        stairs: document.getElementById("stairs").value, wt: document.getElementById("wt").value, scans: document.getElementById("scans").value, labs: document.getElementById("labs").value,
+        tsh: document.getElementById("tsh").value, crp: document.getElementById("crp").value, esr: document.getElementById("esr").value, vitd: document.getElementById("vitd").value,
+        cs: document.getElementById("cs").value, menopause: document.getElementById("menopause").value, required: document.getElementById("required").value, attachment: currentFileBase64,
+        isInjection: patients.find(x => x.code == editCode)?.isInjection || false
+    };
+    if (editCode) {
+        let index = patients.findIndex(x => x.code == editCode);
+        patientData.code = parseInt(editCode, 10);
+        patients[index] = patientData;
+    } else {
+        patientData.code = nextPatientCode();
+        patients.push(patientData);
+    }
+    persistPatients();
+    showPatients();
+}
+
+function showPatients(){
+    setSidebarActive('patients');
+    document.getElementById("content").innerHTML = `
+    <div class="animate-view"><h2>${t('nav_manage')}</h2>
+        <div class="search-filter-container">
+            <div class="form-group">
+                <input type="text" id="searchInput" placeholder="${t('search_placeholder')}" onkeyup="filterTable()">
+            </div>
+            <div class="form-group filter-box">
+                <label style="font-size:12px; font-weight:bold;">${t('label_class')}</label>
+                <select id="classFilter" onchange="filterTable()">
+                    <option value="all">${t('class_all')}</option>
+                    <option value="inj">${t('class_inj')}</option>
+                </select>
+            </div>
+        </div>
+        <table><thead><tr><th>${t('table_id')}</th><th>${t('table_name')}</th><th>${t('table_phone')}</th><th>${t('table_actions')}</th></tr></thead><tbody id="tableBody"></tbody></table>
+    </div>`;
+    renderRows("", "all");
+}
+
+function renderRows(f, filterType) {
+    let html = "";
+    patients.filter(p => {
+        // فلتر البحث بالاسم أو الكود
+        const matchesSearch = p.name.toLowerCase().includes(f.toLowerCase()) || p.code.toString().includes(f);
+        // فلتر التصنيف (Injection)
+        const matchesClass = (filterType === "all") || (filterType === "inj" && p.isInjection === true);
+        
+        return matchesSearch && matchesClass;
+    }).forEach(p => {
+        let injectClass = p.isInjection ? "injection-marked" : "";
+        html += `<tr class="${injectClass}"><td>#${p.code}</td><td><strong>${p.name}</strong> ${p.attachment ? '🖼️' : ''}</td><td>${p.phone}</td>
+        <td><div class="action-menu">
+                <button type="button" class="dots-btn" aria-label="${t('menu_aria')}" onclick="toggleDropdown(event, ${p.code})"><span class="dots-bar" aria-hidden="true"></span></button>
+                <div id="dropdown-${p.code}" class="dropdown-content">
+                    <button onclick="viewPatient(${p.code})">${t('btn_view')}</button>
+                    <button onclick="addPatientPage(${p.code})">${t('btn_edit')}</button>
+                    <button onclick="markInjection(${p.code}, true)" style="background:#e3f2fd; color:#0d47a1;">${t('inj_mark')}</button>
+                    <button onclick="markInjection(${p.code}, false)">${t('none_mark')}</button>
+                    <button onclick="deletePatient(${p.code})" style="color:var(--danger-color)">${t('btn_delete')}</button>
+                </div>
+            </div></td></tr>`;
+    });
+    document.getElementById("tableBody").innerHTML = html;
+}
+
+function toggleDropdown(event, code) {
+    event.stopPropagation();
+    var dropdowns = document.getElementsByClassName("dropdown-content");
+    for (var i = 0; i < dropdowns.length; i++) { if (dropdowns[i].id !== 'dropdown-' + code) dropdowns[i].classList.remove('show'); }
+    document.getElementById('dropdown-' + code).classList.toggle("show");
+}
+
+function markInjection(code, status) {
+    let p = patients.find(x => x.code === code);
+    if(p) { 
+        p.isInjection = status; 
+        // نحتفظ بالفلتر الحالي أثناء التحديث
+        const currentSearch = document.getElementById("searchInput").value;
+        const currentFilter = document.getElementById("classFilter").value;
+        renderRows(currentSearch, currentFilter);
+        persistPatients();
+    }
+}
+
+function viewPatient(code) {
+    setSidebarActive('patients');
+    let p = patients.find(x => x.code === code);
+    const visitsCount = getPatientVisitsCount(p.code);
+    let fields = [{l:t('label_name'),v:p.name},{l:t('label_gender'),v:p.gender},{l:t('label_phone'),v:p.phone},{l:t('label_age'),v:p.age},{l:t('label_regdate'),v:p.regdate},{l:'عدد الزيارات',v:visitsCount},{l:'PMH',v:p.pmh},{l:'PSH',v:p.psh},{l:'c/o',v:p.co},{l:'FH',v:p.fh},{l:'Stress',v:p.stress},{l:'Physiotherapy',v:p.physio},{l:'Response',v:p.resp1},{l:'Number',v:p.num},{l:'Injection',v:p.inj},{l:'Type',v:p.type},{l:'Response (Inj)',v:p.resp2},{l:'Stairs',v:p.stairs},{l:'WT',v:p.wt},{l:'Scans',v:p.scans},{l:'Labs',v:p.labs},{l:'TSH',v:p.tsh},{l:'CRP',v:p.crp},{l:'ESR',v:p.esr},{l:'Vit D',v:p.vitd},{l:'CS',v:p.cs},{l:'Menopause',v:p.menopause},{l:t('label_required'),v:p.required}];
+    let html = `<div class="animate-view"><div class="form-card"><h2>📋 ${p.name}</h2><div class="form-grid">`;
+    fields.forEach(f => { html += `<div class="view-row"><strong>${f.l}: </strong>${f.v || '---'}</div>`; });
+    if(p.attachment) html += `<div class="form-group full-width" style="text-align:center;"><img src="${p.attachment}" style="max-width:100%; border-radius:15px; border:2px solid var(--accent-color);"></div>`;
+    html += `</div><button class="save-btn" onclick="showPatients()">${t('btn_back')}</button></div></div>`;
+    document.getElementById("content").innerHTML = html;
+}
+
+function deletePatient(c) {
+    if (!confirm(t("confirm_delete"))) return;
+    patients = patients.filter(function (x) { return Number(x.code) !== Number(c); });
+    persistPatients();
+    showPatients();
+}
+
+function filterTable() { 
+    const searchVal = document.getElementById("searchInput").value;
+    const filterVal = document.getElementById("classFilter").value;
+    renderRows(searchVal, filterVal); 
+}
+
+function showSettings() {
+    setSidebarActive("settings");
+    document.getElementById("content").innerHTML =
+        "<div class=\"animate-view\"><h2>" + t("settings_title") + "</h2>" +
+        "<div class=\"form-card\" style=\"max-width:520px;\">" +
+        "<div class=\"settings-item\"><span data-i18n=\"settings_dark\">" + t("settings_dark") + "</span><input type=\"checkbox\" onchange=\"toggleDarkMode()\" " + (document.body.classList.contains("dark-mode") ? "checked" : "") + "></div>" +
+        "<div class=\"settings-item\"><span data-i18n=\"settings_lang\">" + t("settings_lang") + "</span><button type=\"button\" class=\"btn-small\" style=\"background:var(--accent-color);color:white;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;\" onclick=\"toggleLanguage()\">Switch</button></div>" +
+        "<div class=\"settings-item\" style=\"flex-direction:column;align-items:stretch;gap:8px;\">" +
+        "<div style=\"display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;\">" +
+        "<span data-i18n=\"settings_reorder_ids\" style=\"font-weight:600;\">" + t("settings_reorder_ids") + "</span>" +
+        "<button type=\"button\" class=\"btn-small\" style=\"background:#5d0000;color:white;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;\" onclick=\"confirmReorderPatientIds()\" data-i18n=\"settings_reorder_btn\">" + t("settings_reorder_btn") + "</button></div>" +
+        "<p style=\"font-size:12px;opacity:0.82;margin:0;line-height:1.45;\" data-i18n=\"settings_reorder_hint\">" + t("settings_reorder_hint") + "</p></div>" +
+        "<div class=\"settings-credits\" data-i18n=\"settings_credits\">" + t("settings_credits") + "</div></div></div>";
+}
+
+function showManageAccounts() {
+    if (!isAdminSession()) {
+        showWelcome();
+        return;
+    }
+    setSidebarActive("accounts");
+    const list = getRegisteredUsers();
+    const extras = getExtraAdmins();
+    let rows = "";
+    list.forEach(function (u, idx) {
+        const name = escapeHtml((u.username || "").trim());
+        const ph = normalizePhoneDigits(u.phone || "");
+        const phoneDisp = ph ? escapeHtml(ph) : "—";
+        rows += "<tr><td>" + (idx + 1) + "</td><td>#" + escapeHtml(String(u.id || "—")) + "</td><td><strong>" + name + "</strong></td><td>" + phoneDisp + "</td><td class=\"accounts-actions-cell\">" +
+            "<button type=\"button\" class=\"save-btn\" style=\"padding:8px 14px;font-size:13px;width:auto;background:#2e7d32;\" onclick=\"openAccountDetailModal(" + idx + ")\">" + t("accounts_view") + "</button>" +
+            "<button type=\"button\" class=\"save-btn\" style=\"padding:8px 14px;font-size:13px;width:auto;\" onclick=\"deleteRegisteredUser(" + idx + ")\">" + t("accounts_delete") + "</button></td></tr>";
+    });
+    if (!rows) {
+        rows = "<tr><td colspan=\"5\" style=\"text-align:center;padding:24px;opacity:0.75;\">" + t("accounts_empty") + "</td></tr>";
+    }
+    let selectOpts = "<option value=\"\">" + t("accounts_assign_placeholder") + "</option>";
+    list.forEach(function (u) {
+        const un = (u.username || "").trim();
+        const low = un.toLowerCase();
+        if (!un || low === ADMIN_USER.toLowerCase()) return;
+        if (extras.indexOf(low) >= 0) return;
+        selectOpts += "<option value=" + JSON.stringify(un) + ">" + escapeHtml(un) + "</option>";
+    });
+    let extraListHtml = "";
+    if (!extras.length) {
+        extraListHtml = "<li style=\"opacity:0.8;\">" + t("accounts_extra_empty") + "</li>";
+    } else {
+        extras.forEach(function (admName) {
+            extraListHtml += "<li style=\"margin:10px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--border-color);padding-bottom:8px;\"><span><strong>" + escapeHtml(admName) + "</strong></span>" +
+                "<button type=\"button\" class=\"link-like-btn\" onclick='revokeExtraAdmin(" + JSON.stringify(admName) + ")'>" + t("accounts_remove_admin_btn") + "</button></li>";
+        });
+    }
+    document.getElementById("content").innerHTML =
+        "<div class=\"animate-view\"><h2>" + t("accounts_title") + "</h2>" +
+        "<p style=\"opacity:0.85;margin-bottom:20px;max-width:720px;line-height:1.5;\">" + t("accounts_hint") + "</p>" +
+        "<div class=\"form-card\" style=\"max-width:720px;\">" +
+        "<table><thead><tr><th>#</th><th>ID</th><th>" + t("accounts_col_user") + "</th><th>" + t("accounts_col_phone") + "</th><th>" + t("table_actions") + "</th></tr></thead><tbody>" + rows + "</tbody></table></div>" +
+        "<div class=\"form-card\" style=\"max-width:720px;margin-top:22px;\">" +
+        "<h3 style=\"margin-top:0;color:var(--accent-color);\">" + t("accounts_assign_title") + "</h3>" +
+        "<p style=\"font-size:13px;opacity:0.85;line-height:1.5;\">" + t("accounts_assign_hint") + "</p>" +
+        "<div style=\"display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:12px;\">" +
+        "<select id=\"assign-admin-select\" style=\"flex:1;min-width:200px;padding:12px;border-radius:10px;border:1.5px solid var(--border-color);\">" + selectOpts + "</select>" +
+        "<button type=\"button\" class=\"save-btn\" style=\"width:auto;padding:12px 20px;\" onclick=\"assignAdminFromSelect()\">" + t("accounts_assign_btn") + "</button></div>" +
+        "<h4 style=\"margin-top:22px;margin-bottom:8px;\">" + t("accounts_extra_title") + "</h4><ul style=\"list-style:none;padding:0;margin:0;\">" + extraListHtml + "</ul></div></div>";
+}
+
+function deleteRegisteredUser(index) {
+    if (!isAdminSession()) return;
+    if (!confirm(t("accounts_confirm_delete"))) return;
+    const list = getRegisteredUsers();
+    if (index < 0 || index >= list.length) return;
+    const uname = (list[index].username || "").trim();
+    list.splice(index, 1);
+    removeExtraAdmin(uname);
+    saveRegisteredUsers(list);
+    showManageAccounts();
+}
+
+function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+window.onload = function () {
+    loadPatientsFromStorage();
+    updateStaticTexts();
+};
+</script>
+</body>
+</html>
