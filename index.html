@@ -1234,14 +1234,25 @@ function applyPartialStateToLocal(state, allowedKeys) {
     if (!state || typeof state !== "object") return;
     allowedKeys.forEach(function (k) {
         if (typeof state[k] === "undefined") return;
+        if (state[k] === null) return;
         localStorage.setItem(k, JSON.stringify(state[k]));
     });
 }
 
-function collectShardStateFromLocal(keys) {
+/** للرفع: بدون مفتاح أو JSON تالف = نتجاهل المفتاح حتى لا يُكتب null في Firestore */
+function collectShardStateFromLocalForPush(keys) {
     const out = {};
     keys.forEach(function (k) {
-        out[k] = safeJsonParse(localStorage.getItem(k), null);
+        const raw = localStorage.getItem(k);
+        if (raw == null || raw === "") return;
+        let v;
+        try {
+            v = JSON.parse(raw);
+        } catch (e) {
+            return;
+        }
+        if (v === null) return;
+        out[k] = v;
     });
     return out;
 }
@@ -1277,14 +1288,25 @@ async function pushFirebaseShard(shard) {
     if (!firebaseSyncEnabled || !firestoreDb) return;
     const sh = FIRESTORE_SHARDS.find(function (x) { return x.queue === shard; });
     if (!sh) return;
+    const state = collectShardStateFromLocalForPush(sh.keys);
+    if (Object.keys(state).length === 0) return;
     try {
         await getFirestoreCollectionRef().doc(sh.id).set(
-            { updatedAt: Date.now(), state: collectShardStateFromLocal(sh.keys) },
+            { updatedAt: Date.now(), state: state },
             { merge: true }
         );
     } catch (e) {
-        // لو فشل الاتصال، البيانات تفضل محليًا
+        console.warn("Firebase write failed (" + shard + "):", e);
     }
+}
+
+async function flushFirebaseShard(shard) {
+    if (!firebaseSyncEnabled || !firestoreDb) return;
+    if (firebasePushTimers[shard]) {
+        clearTimeout(firebasePushTimers[shard]);
+        firebasePushTimers[shard] = null;
+    }
+    await pushFirebaseShard(shard);
 }
 
 function queueFirebasePushFor(shard) {
@@ -1313,9 +1335,8 @@ async function initFirebaseSync() {
                     applyPartialStateToLocal(data.state, sh.keys);
                 }
             } else {
-                const partial = collectShardStateFromLocal(sh.keys);
-                const hasAny = Object.keys(partial).some(function (k) { return partial[k] !== null; });
-                if (hasAny) {
+                const partial = collectShardStateFromLocalForPush(sh.keys);
+                if (Object.keys(partial).length) {
                     await ref.set({ updatedAt: Date.now(), state: partial }, { merge: true });
                 }
             }
@@ -1376,6 +1397,7 @@ function applySharedSnapshotToLocal(state) {
     if (!state || typeof state !== "object") return;
     SHARED_SYNC_KEYS.forEach(function (k) {
         if (typeof state[k] === "undefined") return;
+        if (state[k] === null) return;
         localStorage.setItem(k, JSON.stringify(state[k]));
     });
 }
@@ -1429,6 +1451,30 @@ function queueServerPush() {
     }, 180);
 }
 
+async function flushServerPush() {
+    if (!serverSyncEnabled) return;
+    if (serverPushTimer) {
+        clearTimeout(serverPushTimer);
+        serverPushTimer = null;
+    }
+    await pushSharedStateToServer();
+}
+
+async function flushPatientsToCloud() {
+    await flushFirebaseShard("patients");
+    await flushServerPush();
+}
+
+async function flushAccountsToCloud() {
+    await flushFirebaseShard("accounts");
+    await flushServerPush();
+}
+
+async function flushAppToCloud() {
+    await flushFirebaseShard("app");
+    await flushServerPush();
+}
+
 async function refreshSharedStateForUi() {
     if (firebaseSyncEnabled) await pullSharedStateFromFirebase();
     else await pullSharedStateFromServer();
@@ -1450,6 +1496,7 @@ function saveExtraAdmins(arr) {
     localStorage.setItem(EXTRA_ADMINS_KEY, JSON.stringify(clean));
     queueServerPush();
     queueFirebasePushFor("accounts");
+    void flushAccountsToCloud().catch(function (e) { console.warn(e); });
 }
 
 function removeExtraAdmin(username) {
@@ -1550,6 +1597,7 @@ function saveRegisteredUsers(arr) {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(arr));
     queueServerPush();
     queueFirebasePushFor("accounts");
+    void flushAccountsToCloud().catch(function (e) { console.warn(e); });
 }
 
 function readRegLockUntil() {
@@ -1889,6 +1937,7 @@ function saveSupportMessages(arr) {
     localStorage.setItem(SUPPORT_CHATS_KEY, JSON.stringify(arr || []));
     queueServerPush();
     queueFirebasePushFor("app");
+    void flushAppToCloud().catch(function (e) { console.warn(e); });
 }
 
 function sendSupportMessage(fromAccount, text) {
@@ -2100,6 +2149,7 @@ function saveAppointmentsData(data) {
     localStorage.setItem(APPOINTMENTS_STORAGE_KEY, JSON.stringify(data));
     queueServerPush();
     queueFirebasePushFor("app");
+    void flushAppToCloud().catch(function (e) { console.warn(e); });
 }
 
 function getAppointmentsArchive() {
@@ -2115,6 +2165,7 @@ function saveAppointmentsArchive(arr) {
     localStorage.setItem(APPOINTMENTS_ARCHIVE_KEY, JSON.stringify(arr || []));
     queueServerPush();
     queueFirebasePushFor("app");
+    void flushAppToCloud().catch(function (e) { console.warn(e); });
 }
 
 function statusLabelAr(status) {
@@ -2693,7 +2744,10 @@ function loadPatientsFromStorage() {
         const raw = localStorage.getItem(PATIENTS_STORAGE_KEY);
         if (!raw) return;
         const arr = JSON.parse(raw);
-        if (!Array.isArray(arr)) return;
+        if (!Array.isArray(arr)) {
+            patients = [];
+            return;
+        }
         patients = arr.map(function (p) {
             const x = Object.assign({}, p);
             if (x.code != null) x.code = parseInt(x.code, 10) || 0;
@@ -2730,13 +2784,18 @@ function reorderPatientIds() {
     persistPatients();
 }
 
-function confirmReorderPatientIds() {
+async function confirmReorderPatientIds() {
     if (!patients.length) {
         alert(t("settings_reorder_empty"));
         return;
     }
     if (!confirm(t("confirm_reorder_ids"))) return;
     reorderPatientIds();
+    try {
+        await flushPatientsToCloud();
+    } catch (e) {
+        console.warn(e);
+    }
     showAuthToast(t("settings_reorder_done"), true);
     showSettings();
 }
@@ -2890,7 +2949,7 @@ window.onclick = function(event) {
 
 function addPatientPage(editCode = null) {
     setSidebarActive('add');
-    let p = editCode ? patients.find(x => x.code === editCode) : null;
+    let p = editCode != null && editCode !== "" ? patients.find(function (x) { return Number(x.code) === Number(editCode); }) : null;
     let title = editCode ? t('form_edit') : t('form_add');
     const formExtraClass = editCode ? "" : " form-card-add-patient";
     currentFileBase64 = p ? p.attachment : "";
@@ -2944,9 +3003,9 @@ function handleFileSelect(evt) {
     }
 }
 
-function savePatient() {
+async function savePatient() {
     let name = document.getElementById("name").value; if(!name) { alert(t('alert_name')); return; }
-    let editCode = document.getElementById("editCode").value;
+    let editCode = (document.getElementById("editCode").value || "").trim();
     let patientData = {
         name: name, gender: document.getElementById("gender").value, phone: document.getElementById("phone").value, age: document.getElementById("age").value,
         regdate: document.getElementById("regdate").value, pmh: document.getElementById("pmh").value, psh: document.getElementById("psh").value, co: document.getElementById("co").value,
@@ -2955,22 +3014,37 @@ function savePatient() {
         stairs: document.getElementById("stairs").value, wt: document.getElementById("wt").value, scans: document.getElementById("scans").value, labs: document.getElementById("labs").value,
         tsh: document.getElementById("tsh").value, crp: document.getElementById("crp").value, esr: document.getElementById("esr").value, vitd: document.getElementById("vitd").value,
         cs: document.getElementById("cs").value, menopause: document.getElementById("menopause").value, required: document.getElementById("required").value, attachment: currentFileBase64,
-        isInjection: patients.find(x => x.code == editCode)?.isInjection || false
+        isInjection: patients.find(function (x) { return Number(x.code) === Number(editCode); })?.isInjection || false
     };
     if (editCode) {
-        let index = patients.findIndex(x => x.code == editCode);
-        patientData.code = parseInt(editCode, 10);
+        const codeNum = parseInt(editCode, 10);
+        if (isNaN(codeNum)) {
+            alert(currentLang === "ar" ? "كود المريض غير صالح." : "Invalid patient code.");
+            return;
+        }
+        const index = patients.findIndex(function (x) { return Number(x.code) === codeNum; });
+        if (index < 0) {
+            alert(currentLang === "ar" ? "لم يُعثر على المريض للتعديل." : "Patient not found to edit.");
+            return;
+        }
+        patientData.code = codeNum;
         patients[index] = patientData;
     } else {
         patientData.code = nextPatientCode();
         patients.push(patientData);
     }
     persistPatients();
-    showPatients();
+    try {
+        await flushPatientsToCloud();
+    } catch (e) {
+        console.warn(e);
+    }
+    await showPatients({ skipPull: true });
 }
 
-async function showPatients(){
-    await refreshSharedStateForUi();
+async function showPatients(options) {
+    const skipPull = options && options.skipPull === true;
+    if (!skipPull) await refreshSharedStateForUi();
     setSidebarActive('patients');
     document.getElementById("content").innerHTML = `
     <div class="animate-view"><h2>${t('nav_manage')}</h2>
@@ -2995,7 +3069,8 @@ function renderRows(f, filterType) {
     let html = "";
     patients.filter(p => {
         // فلتر البحث بالاسم أو الكود
-        const matchesSearch = p.name.toLowerCase().includes(f.toLowerCase()) || p.code.toString().includes(f);
+        const nm = (p.name != null ? String(p.name) : "").toLowerCase();
+        const matchesSearch = nm.includes((f || "").toLowerCase()) || (p.code != null && p.code.toString().includes(f));
         // فلتر التصنيف (Injection)
         const matchesClass = (filterType === "all") || (filterType === "inj" && p.isInjection === true);
         
@@ -3024,8 +3099,8 @@ function toggleDropdown(event, code) {
     document.getElementById('dropdown-' + code).classList.toggle("show");
 }
 
-function markInjection(code, status) {
-    let p = patients.find(x => x.code === code);
+async function markInjection(code, status) {
+    let p = patients.find(function (x) { return Number(x.code) === Number(code); });
     if(p) { 
         p.isInjection = status; 
         // نحتفظ بالفلتر الحالي أثناء التحديث
@@ -3033,6 +3108,11 @@ function markInjection(code, status) {
         const currentFilter = document.getElementById("classFilter").value;
         renderRows(currentSearch, currentFilter);
         persistPatients();
+        try {
+            await flushPatientsToCloud();
+        } catch (e) {
+            console.warn(e);
+        }
     }
 }
 
@@ -3048,11 +3128,16 @@ function viewPatient(code) {
     document.getElementById("content").innerHTML = html;
 }
 
-function deletePatient(c) {
+async function deletePatient(c) {
     if (!confirm(t("confirm_delete"))) return;
     patients = patients.filter(function (x) { return Number(x.code) !== Number(c); });
     persistPatients();
-    showPatients();
+    try {
+        await flushPatientsToCloud();
+    } catch (e) {
+        console.warn(e);
+    }
+    await showPatients({ skipPull: true });
 }
 
 function filterTable() { 
