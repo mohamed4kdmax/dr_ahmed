@@ -1157,6 +1157,7 @@ const REG_LOCK_TIER_KEY = "clinic_reg_lock_tier";
 const REG_FAIL_STREAK_KEY = "clinic_reg_fail_streak";
 const EXTRA_ADMINS_KEY = "clinic_extra_admins";
 const SUPPORT_CHATS_KEY = "clinic_support_chats_v1";
+const SESSION_USER_KEY = "clinic_session_user_v1";
 const APPOINTMENTS_STORAGE_KEY = "clinic_appointments_v1";
 const APPOINTMENTS_ARCHIVE_KEY = "clinic_appointments_archive_v1";
 const APPOINTMENT_DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
@@ -1922,6 +1923,26 @@ function getCurrentAccount() {
         if ((list[i].username || "").trim().toLowerCase() === u) return list[i];
     }
     return null;
+}
+
+function restoreSessionUser() {
+    const raw = localStorage.getItem(SESSION_USER_KEY);
+    const saved = raw ? String(raw).trim() : "";
+    if (!saved) return false;
+    if (saved.toLowerCase() === ADMIN_USER.toLowerCase()) {
+        currentSessionUser = saved;
+        return true;
+    }
+    const list = getRegisteredUsers();
+    const exists = list.some(function (u) {
+        return String(u.username || "").trim().toLowerCase() === saved.toLowerCase();
+    });
+    if (!exists) {
+        localStorage.removeItem(SESSION_USER_KEY);
+        return false;
+    }
+    currentSessionUser = saved;
+    return true;
 }
 
 function getSupportMessages() {
@@ -2830,6 +2851,7 @@ function handleLogin() {
     const pass = document.getElementById("password").value;
     if (validateCredentials(user, pass)) {
         currentSessionUser = (user || "").trim();
+        localStorage.setItem(SESSION_USER_KEY, currentSessionUser);
         document.getElementById("login-error").textContent = "";
         showAuthToast(t("login_success"), true);
         const btn = document.getElementById("login-submit-btn");
@@ -2893,7 +2915,10 @@ function forgotPassword() {
     }
 }
 
-function logout() { location.reload(); }
+function logout() {
+    localStorage.removeItem(SESSION_USER_KEY);
+    location.reload();
+}
 
 function updateStaticTexts() {
     document.querySelectorAll('[data-i18n]').forEach(el => { el.innerText = t(el.getAttribute('data-i18n')); });
@@ -3346,6 +3371,9 @@ window.onload = async function () {
     }
     loadPatientsFromStorage();
     updateStaticTexts();
+    if (restoreSessionUser()) {
+        enterApp();
+    }
     setInterval(function () {
         if (firebaseSyncEnabled) pullSharedStateFromFirebase();
         else pullSharedStateFromServer();
