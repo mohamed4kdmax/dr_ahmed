@@ -1130,10 +1130,10 @@ body.en-mode .accounts-actions-cell { justify-content: flex-end; }
         <button type="button" data-nav="patients" onclick="showPatients()"><span data-i18n="side_list">👥 قائمة المرضى</span></button>
         <button type="button" data-nav="add" onclick="addPatientPage()"><span data-i18n="side_add">➕ إضافة مريض جديد</span></button>
         <button type="button" data-nav="settings" onclick="showSettings()"><span data-i18n="side_settings">⚙️ الإعدادات</span></button>
-        <button type="button" data-nav="chat" onclick="showChatCenter()"><span>💬 الشات</span></button>
-        <button type="button" data-nav="appointments" onclick="showAppointmentsChoice()"><span>📅 المواعيد</span></button>
-        <button type="button" data-nav="appointments-history" onclick="showAppointmentsHistory()"><span>🗂️ المواعيد السابقة</span></button>
-        <button type="button" data-nav="profile" onclick="showAccountSettings()"><span>👤 إعدادات الحساب</span></button>
+        <button type="button" data-nav="chat" onclick="showChatCenter()"><span data-i18n="side_chat">💬 الشات</span></button>
+        <button type="button" data-nav="appointments" onclick="showAppointmentsChoice()"><span data-i18n="side_appointments">📅 المواعيد</span></button>
+        <button type="button" data-nav="appointments-history" onclick="showAppointmentsHistory()"><span data-i18n="side_appointments_history">🗂️ المواعيد السابقة</span></button>
+        <button type="button" data-nav="profile" onclick="showAccountSettings()"><span data-i18n="side_profile">👤 إعدادات الحساب</span></button>
         <button type="button" id="sidebar-manage-accounts" data-nav="accounts" onclick="showManageAccounts()" style="display:none;"><span data-i18n="side_accounts">👤 إدارة الحسابات</span></button>
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
         <button onclick="logout()" style="color: var(--danger-color);"><span data-i18n="side_logout">🚪 تسجيل الخروج</span></button>
@@ -1984,17 +1984,17 @@ function verifySupportChatIdentity() {
     const query = (idEl && idEl.value ? idEl.value : "").trim();
     const account = resolveAccountByIdOrPhone(query);
     if (!account) {
-        msg.textContent = "البيانات غير صحيحة. اكتب ID أو رقم هاتف صحيح.";
+        msg.textContent = t("chat_identity_invalid");
         return;
     }
     const current = getCurrentAccount();
     if (current && String(current.id || "") !== String(account.id || "")) {
-        msg.textContent = "هذا الحساب لا يطابق المستخدم الحالي.";
+        msg.textContent = t("chat_identity_mismatch");
         return;
     }
     supportWidgetVerifiedId = String(account.id || "");
     msg.style.color = "var(--accent-color)";
-    msg.textContent = "تم التحقق بنجاح، يمكنك إرسال الرسائل.";
+    msg.textContent = t("chat_identity_verified");
     if (identity) identity.style.display = "none";
     if (compose) compose.style.display = "block";
     renderSupportWidgetLog();
@@ -2015,11 +2015,11 @@ function renderSupportWidgetLog() {
     if (!log || !supportWidgetVerifiedId) return;
     const rows = getSupportMessages().filter(function (m) { return String(m.fromId || "") === supportWidgetVerifiedId; });
     if (!rows.length) {
-        log.innerHTML = "<div style=\"font-size:12px;opacity:.75;\">لا توجد رسائل بعد.</div>";
+        log.innerHTML = "<div style=\"font-size:12px;opacity:.75;\">" + t("chat_no_messages_yet") + "</div>";
         return;
     }
     log.innerHTML = rows.slice(-20).map(function (m) {
-        const who = m.fromAdmin ? "الدعم" : "أنت";
+        const who = m.fromAdmin ? t("chat_support_label") : t("chat_you_label");
         const cls = m.fromAdmin ? "admin" : "user";
         return "<div class=\"support-msg " + cls + "\"><strong>" + who + ":</strong> " + escapeHtml(m.text || "") + "</div>";
     }).join("");
@@ -2028,16 +2028,29 @@ function renderSupportWidgetLog() {
 function sendSupportWidgetMessage() {
     const txtEl = document.getElementById("support-chat-text");
     const msg = document.getElementById("support-chat-msg");
-    if (!supportWidgetVerifiedId) { msg.textContent = "أكد ID أولاً."; return; }
+    if (!supportWidgetVerifiedId) { msg.textContent = t("chat_confirm_id_first"); return; }
     const text = (txtEl && txtEl.value ? txtEl.value : "").trim();
-    if (!text) { msg.textContent = "اكتب رسالة أولاً."; return; }
+    if (!text) { msg.textContent = t("chat_type_message_first"); return; }
     const acc = getRegisteredUsers().find(function (u) { return String(u.id || "") === supportWidgetVerifiedId; });
-    if (!acc) { msg.textContent = "الحساب غير موجود."; return; }
+    if (!acc) { msg.textContent = t("chat_account_missing"); return; }
     sendSupportMessage(acc, text);
     txtEl.value = "";
     msg.style.color = "var(--accent-color)";
-    msg.textContent = "تم إرسال الرسالة للدعم.";
+    msg.textContent = t("chat_message_sent_support");
     renderSupportWidgetLog();
+}
+
+function prefFillAdminReply(id, msgIndex) {
+    const box = document.getElementById("admin-reply-" + id);
+    if (!box) return;
+    const rows = getSupportMessages().filter(function (m) {
+        return String(m.fromId || "") === String(id);
+    });
+    const m = rows[msgIndex];
+    if (!m || m.fromAdmin) return;
+    const quoted = currentLang === "ar" ? "رداً على: " : "Replying to: ";
+    box.value = quoted + (m.text || "") + "\n";
+    box.focus();
 }
 
 async function showChatCenter() {
@@ -2051,22 +2064,25 @@ async function showChatCenter() {
             if (!groups[k]) groups[k] = [];
             groups[k].push(m);
         });
-        let html = "<div class=\"animate-view\"><h2>💬 شات الدعم</h2>";
+        let html = "<div class=\"animate-view\"><h2>" + t("chat_center_title_admin") + "</h2>";
         const ids = Object.keys(groups);
-        if (!ids.length) html += "<div class=\"form-card\">لا توجد رسائل حالياً.</div>";
+        if (!ids.length) html += "<div class=\"form-card\">" + t("chat_no_messages_now") + "</div>";
         ids.forEach(function (id) {
             const msgs = groups[id];
             const user = (msgs[0] && msgs[0].fromUser) || "—";
-            html += "<div class=\"form-card\" style=\"max-width:760px;margin-bottom:16px;\"><h3 style=\"margin-top:0;\">الحساب: " + escapeHtml(user) + " (#" + escapeHtml(id) + ")</h3>";
+            html += "<div class=\"form-card\" style=\"max-width:760px;margin-bottom:16px;\"><h3 style=\"margin-top:0;\">" + t("chat_account_label") + ": " + escapeHtml(user) + " (#" + escapeHtml(id) + ")</h3>";
             html += "<div class=\"support-chat-log\" style=\"max-height:230px;\">";
-            html += msgs.map(function (m) {
-                const who = m.fromAdmin ? "الدعم" : "العميل";
+            html += msgs.map(function (m, idx) {
+                const who = m.fromAdmin ? t("chat_support_label") : t("chat_client_label");
                 const cls = m.fromAdmin ? "admin" : "user";
-                return "<div class=\"support-msg " + cls + "\"><strong>" + who + ":</strong> " + escapeHtml(m.text || "") + "</div>";
+                const replyBtn = !m.fromAdmin
+                    ? "<button type=\"button\" class=\"link-like-btn\" style=\"padding:0;margin-right:8px;\" onclick=\"prefFillAdminReply(" + JSON.stringify(id) + "," + idx + ")\">" + t("chat_reply_to_message") + "</button>"
+                    : "";
+                return "<div class=\"support-msg " + cls + "\"><strong>" + who + ":</strong> " + escapeHtml(m.text || "") + replyBtn + "</div>";
             }).join("");
             html += "</div>";
-            html += "<textarea id=\"admin-reply-" + escapeHtml(id) + "\" placeholder=\"اكتب ردك...\"></textarea>";
-            html += "<button type=\"button\" class=\"save-btn\" style=\"margin-top:8px;\" onclick=\"sendAdminReply(" + JSON.stringify(id) + ")\">إرسال رد</button></div>";
+            html += "<textarea id=\"admin-reply-" + escapeHtml(id) + "\" placeholder=\"" + t("chat_admin_reply_ph") + "\"></textarea>";
+            html += "<button type=\"button\" class=\"save-btn\" style=\"margin-top:8px;\" onclick=\"sendAdminReply(" + JSON.stringify(id) + ")\">" + t("chat_send_reply_btn") + "</button></div>";
         });
         html += "</div>";
         document.getElementById("content").innerHTML = html;
@@ -2074,21 +2090,21 @@ async function showChatCenter() {
     }
     const acc = getCurrentAccount();
     if (!acc) {
-        document.getElementById("content").innerHTML = "<div class=\"animate-view\"><div class=\"form-card\">هذه الصفحة متاحة للحسابات المسجلة فقط.</div></div>";
+        document.getElementById("content").innerHTML = "<div class=\"animate-view\"><div class=\"form-card\">" + t("chat_registered_only") + "</div></div>";
         return;
     }
     const my = all.filter(function (m) { return String(m.fromId || "") === String(acc.id); });
     document.getElementById("content").innerHTML =
-        "<div class=\"animate-view\"><h2>💬 الشات</h2><div class=\"form-card\" style=\"max-width:760px;\">" +
-        "<p style=\"opacity:.8;\">الرسائل بينك وبين الدعم.</p>" +
+        "<div class=\"animate-view\"><h2>" + t("chat_center_title_user") + "</h2><div class=\"form-card\" style=\"max-width:760px;\">" +
+        "<p style=\"opacity:.8;\">" + t("chat_between_you_support") + "</p>" +
         "<div class=\"support-chat-log\" style=\"max-height:250px;\">" +
         (my.length ? my.map(function (m) {
-            const who = m.fromAdmin ? "الدعم" : "أنت";
+            const who = m.fromAdmin ? t("chat_support_label") : t("chat_you_label");
             const cls = m.fromAdmin ? "admin" : "user";
             return "<div class=\"support-msg " + cls + "\"><strong>" + who + ":</strong> " + escapeHtml(m.text || "") + "</div>";
-        }).join("") : "<div style=\"font-size:13px;opacity:.8;\">لا توجد رسائل بعد.</div>") +
-        "</div><textarea id=\"user-chat-text\" placeholder=\"اكتب رسالتك\"></textarea>" +
-        "<button type=\"button\" class=\"save-btn\" style=\"margin-top:8px;\" onclick=\"sendUserChatFromCenter()\">إرسال</button>" +
+        }).join("") : "<div style=\"font-size:13px;opacity:.8;\">" + t("chat_no_messages_yet") + "</div>") +
+        "</div><textarea id=\"user-chat-text\" placeholder=\"" + t("chat_user_message_ph") + "\"></textarea>" +
+        "<button type=\"button\" class=\"save-btn\" style=\"margin-top:8px;\" onclick=\"sendUserChatFromCenter()\">" + t("chat_send_btn") + "</button>" +
         "</div></div>";
 }
 
@@ -2901,6 +2917,18 @@ function updateStaticTexts() {
     }
     const ppi = document.getElementById("patient-portal-id");
     if (ppi) ppi.placeholder = t("patient_portal_id_ph");
+    const supportFab = document.getElementById("support-chat-fab");
+    if (supportFab) supportFab.title = t("chat_support_label");
+    const supportTitle = document.querySelector("#support-chat-box h4");
+    if (supportTitle) supportTitle.textContent = t("chat_center_title_admin");
+    const supportId = document.getElementById("support-chat-id");
+    if (supportId) supportId.placeholder = t("chat_identity_ph");
+    const supportTxt = document.getElementById("support-chat-text");
+    if (supportTxt) supportTxt.placeholder = t("chat_user_message_support_ph");
+    const supportBtns = document.querySelectorAll("#support-chat-box button");
+    if (supportBtns[0]) supportBtns[0].textContent = t("chat_verify_open");
+    if (supportBtns[1]) supportBtns[1].textContent = t("chat_send_btn");
+    if (supportBtns[2]) supportBtns[2].textContent = t("chat_change_id_btn");
     const pwAria = t("pw_toggle_aria");
     document.querySelectorAll("#login-screen .pw-reveal-cb").forEach(function (cb) {
         cb.setAttribute("aria-label", pwAria);
@@ -2910,12 +2938,28 @@ function updateStaticTexts() {
     });
 }
 
+function rerenderCurrentSectionAfterLangChange() {
+    if (document.getElementById("login-screen").style.display !== "none") return;
+    const activeBtn = document.querySelector(".sidebar button[data-nav].sidebar-active");
+    const active = activeBtn ? activeBtn.getAttribute("data-nav") : "home";
+    if (active === "home") { showWelcome(); return; }
+    if (active === "patients") { showPatients(); return; }
+    if (active === "add") { addPatientPage(); return; }
+    if (active === "settings") { showSettings(); return; }
+    if (active === "chat") { showChatCenter(); return; }
+    if (active === "appointments") { showAppointmentsChoice(); return; }
+    if (active === "appointments-history") { showAppointmentsHistory(); return; }
+    if (active === "profile") { showAccountSettings(); return; }
+    if (active === "accounts") { showManageAccounts(); return; }
+    showWelcome();
+}
+
 function toggleLanguage() {
     currentLang = currentLang === 'ar' ? 'en' : 'ar';
     document.body.classList.toggle('en-mode', currentLang === 'en');
     document.getElementById('html-tag').setAttribute('lang', currentLang);
     updateStaticTexts();
-    if(document.getElementById("login-screen").style.display === "none") showPatients();
+    rerenderCurrentSectionAfterLangChange();
 }
 
 function showWelcome() {
@@ -3153,6 +3197,7 @@ function showSettings() {
         "<div class=\"form-card\" style=\"max-width:520px;\">" +
         "<div class=\"settings-item\"><span data-i18n=\"settings_dark\">" + t("settings_dark") + "</span><input type=\"checkbox\" onchange=\"toggleDarkMode()\" " + (document.body.classList.contains("dark-mode") ? "checked" : "") + "></div>" +
         "<div class=\"settings-item\"><span data-i18n=\"settings_lang\">" + t("settings_lang") + "</span><button type=\"button\" class=\"btn-small\" style=\"background:var(--accent-color);color:white;border:none;border-radius:8px;padding:8px 14px;cursor:pointer;\" onclick=\"toggleLanguage()\">Switch</button></div>" +
+        "<div class=\"settings-item\"><span data-i18n=\"settings_web_version\">" + t("settings_web_version") + "</span><strong style=\"font-size:14px;\">v 1.1.15</strong></div>" +
         "<div class=\"settings-item\" style=\"flex-direction:column;align-items:stretch;gap:8px;\">" +
         "<div style=\"display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;\">" +
         "<span data-i18n=\"settings_reorder_ids\" style=\"font-weight:600;\">" + t("settings_reorder_ids") + "</span>" +
@@ -3160,6 +3205,73 @@ function showSettings() {
         "<p style=\"font-size:12px;opacity:0.82;margin:0;line-height:1.45;\" data-i18n=\"settings_reorder_hint\">" + t("settings_reorder_hint") + "</p></div>" +
         "<div class=\"settings-credits\" data-i18n=\"settings_credits\">" + t("settings_credits") + "</div></div></div>";
 }
+
+Object.assign(i18n.ar, {
+    side_chat: "💬 الشات",
+    side_appointments: "📅 المواعيد",
+    side_appointments_history: "🗂️ المواعيد السابقة",
+    side_profile: "👤 إعدادات الحساب",
+    settings_web_version: "نسخة الويب",
+    chat_center_title_admin: "💬 شات الدعم",
+    chat_center_title_user: "💬 الشات",
+    chat_no_messages_now: "لا توجد رسائل حالياً.",
+    chat_account_label: "الحساب",
+    chat_support_label: "الدعم",
+    chat_client_label: "العميل",
+    chat_you_label: "أنت",
+    chat_reply_to_message: "رد على الرسالة",
+    chat_admin_reply_ph: "اكتب ردك...",
+    chat_send_reply_btn: "إرسال رد",
+    chat_registered_only: "هذه الصفحة متاحة للحسابات المسجلة فقط.",
+    chat_between_you_support: "الرسائل بينك وبين الدعم.",
+    chat_no_messages_yet: "لا توجد رسائل بعد.",
+    chat_user_message_ph: "اكتب رسالتك",
+    chat_user_message_support_ph: "اكتب رسالتك للدعم",
+    chat_send_btn: "إرسال",
+    chat_identity_ph: "اكتب ID الحساب (5 أرقام) أو رقم الهاتف",
+    chat_verify_open: "تحقق وفتح الشات",
+    chat_change_id_btn: "تغيير ID",
+    chat_identity_invalid: "البيانات غير صحيحة. اكتب ID أو رقم هاتف صحيح.",
+    chat_identity_mismatch: "هذا الحساب لا يطابق المستخدم الحالي.",
+    chat_identity_verified: "تم التحقق بنجاح، يمكنك إرسال الرسائل.",
+    chat_confirm_id_first: "أكد ID أولاً.",
+    chat_type_message_first: "اكتب رسالة أولاً.",
+    chat_account_missing: "الحساب غير موجود.",
+    chat_message_sent_support: "تم إرسال الرسالة للدعم."
+});
+Object.assign(i18n.en, {
+    side_chat: "💬 Chat",
+    side_appointments: "📅 Appointments",
+    side_appointments_history: "🗂️ Previous appointments",
+    side_profile: "👤 Account settings",
+    settings_web_version: "Web version",
+    chat_center_title_admin: "💬 Support chat",
+    chat_center_title_user: "💬 Chat",
+    chat_no_messages_now: "No messages right now.",
+    chat_account_label: "Account",
+    chat_support_label: "Support",
+    chat_client_label: "Client",
+    chat_you_label: "You",
+    chat_reply_to_message: "Reply to message",
+    chat_admin_reply_ph: "Type your reply...",
+    chat_send_reply_btn: "Send reply",
+    chat_registered_only: "This page is available for registered accounts only.",
+    chat_between_you_support: "Messages between you and support.",
+    chat_no_messages_yet: "No messages yet.",
+    chat_user_message_ph: "Type your message",
+    chat_user_message_support_ph: "Type your message to support",
+    chat_send_btn: "Send",
+    chat_identity_ph: "Enter account ID (5 digits) or phone number",
+    chat_verify_open: "Verify and open chat",
+    chat_change_id_btn: "Change ID",
+    chat_identity_invalid: "Invalid data. Enter a valid account ID or phone number.",
+    chat_identity_mismatch: "This account does not match the current user.",
+    chat_identity_verified: "Verified successfully, you can now send messages.",
+    chat_confirm_id_first: "Verify your ID first.",
+    chat_type_message_first: "Type a message first.",
+    chat_account_missing: "Account not found.",
+    chat_message_sent_support: "Message sent to support."
+});
 
 async function showManageAccounts() {
     await refreshSharedStateForUi();
